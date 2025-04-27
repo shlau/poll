@@ -35,3 +35,10 @@ dev-compose-up-build:
 .PHONY: dev-compose-down
 dev-compose-down:
 	docker compose -f ${DEV_COMPOSE_FILE} down
+
+.PHONY: postgres-down
+postgres-down:
+	sudo systemctl stop postgresql	
+
+.PHONY: dev-down
+dev-down: dev-compose-down postgres-down
