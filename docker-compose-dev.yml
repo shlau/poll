@@ -1,0 +1,57 @@
+services:
+  client:
+    container_name: "client"
+    image: client
+    build:
+      context: ./client/
+    init: true
+    volumes:
+      - type: bind
+        source: ./client
+        target: /usr/src/app/
+      - type: volume
+        target: /usr/src/app/node_modules
+      - type: bind
+        source: ./client/vite.config.ts
+        target: /usr/src/app/vite.config.ts
+    networks:
+      - frontend
+    ports:
+      - 5173:5173
+  api:
+    container_name: "api"
+    env_file: ".env"
+    image: api
+    build:
+      context: ./api
+      target: dev
+    init: true
+    volumes:
+      - type: bind
+        source: ./api/
+        target: /app/
+    networks:
+      - backend
+      - frontend
+    depends_on:
+      - db
+    ports:
+      - 3000:3000
+  db:
+    image: postgres:12.19-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - PGUSER=${POSTGRES_USER}
+    networks:
+      - backend
+    ports:
+      - 5432:5432
+volumes:
+  pgdata:
+networks:
+  backend:
+  frontend:
