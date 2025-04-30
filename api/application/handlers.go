@@ -5,9 +5,16 @@ import (
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/go-chi/render"
 )
 
-type PollData struct {
+type PollRequest struct {
+	Name string `json:"name"`
+}
+
+type PollResponse struct {
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
@@ -18,17 +25,19 @@ func (app *Application) CreatePoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var data PollData
+	var data PollRequest
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		http.Error(w, "error decoding request body", http.StatusBadRequest)
 		return
 	}
 
-	insertedPoll, err := app.queries.CreatePoll(r.Context(), data.Name)
+	createdPoll, err := app.queries.CreatePoll(r.Context(), data.Name)
 	if err != nil {
 		http.Error(w, "error creating poll", http.StatusInternalServerError)
 		return
 	}
-	log.Println(insertedPoll)
+	log.Println(createdPoll)
+	res := &PollResponse{ID: createdPoll.ID.String(), Name: createdPoll.Name}
+	render.JSON(w, r, res)
 }
