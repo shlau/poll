@@ -7,6 +7,9 @@ package generatedsql
 
 import (
 	"context"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createPoll = `-- name: CreatePoll :one
@@ -21,4 +24,95 @@ func (q *Queries) CreatePoll(ctx context.Context, name string) (Poll, error) {
 	var i Poll
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
+}
+
+const createQuestion = `-- name: CreateQuestion :one
+INSERT INTO
+    questions (value, poll_id)
+VALUES
+    ($1, $2) RETURNING id, value, poll_id, votes
+`
+
+type CreateQuestionParams struct {
+	Value  string
+	PollID uuid.UUID
+}
+
+func (q *Queries) CreateQuestion(ctx context.Context, arg CreateQuestionParams) (Question, error) {
+	row := q.db.QueryRow(ctx, createQuestion, arg.Value, arg.PollID)
+	var i Question
+	err := row.Scan(
+		&i.ID,
+		&i.Value,
+		&i.PollID,
+		&i.Votes,
+	)
+	return i, err
+}
+
+const deleteQuestion = `-- name: DeleteQuestion :exec
+DELETE FROM questions WHERE questions.id = ($1)
+`
+
+func (q *Queries) DeleteQuestion(ctx context.Context, id pgtype.Int8) error {
+	_, err := q.db.Exec(ctx, deleteQuestion, id)
+	return err
+}
+
+const downvote = `-- name: Downvote :exec
+UPDATE questions SET votes = votes - 1 WHERE questions.id = ($1)
+`
+
+func (q *Queries) Downvote(ctx context.Context, id pgtype.Int8) error {
+	_, err := q.db.Exec(ctx, downvote, id)
+	return err
+}
+
+const getPoll = `-- name: GetPoll :one
+SELECT id, name FROM polls WHERE id = ($1)
+`
+
+func (q *Queries) GetPoll(ctx context.Context, id uuid.UUID) (Poll, error) {
+	row := q.db.QueryRow(ctx, getPoll, id)
+	var i Poll
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const getPollQuestions = `-- name: GetPollQuestions :many
+SELECT id, value, poll_id, votes FROM questions WHERE questions.poll_id = ($1)
+`
+
+func (q *Queries) GetPollQuestions(ctx context.Context, pollID uuid.UUID) ([]Question, error) {
+	rows, err := q.db.Query(ctx, getPollQuestions, pollID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Question
+	for rows.Next() {
+		var i Question
+		if err := rows.Scan(
+			&i.ID,
+			&i.Value,
+			&i.PollID,
+			&i.Votes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const upvote = `-- name: Upvote :exec
+UPDATE questions SET votes = votes + 1 WHERE questions.id = ($1)
+`
+
+func (q *Queries) Upvote(ctx context.Context, id pgtype.Int8) error {
+	_, err := q.db.Exec(ctx, upvote, id)
+	return err
 }

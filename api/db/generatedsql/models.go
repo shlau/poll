@@ -5,10 +5,18 @@
 package generatedsql
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Poll struct {
-	ID   pgtype.UUID
+	ID   uuid.UUID
 	Name string
+}
+
+type Question struct {
+	ID     pgtype.Int8
+	Value  string
+	PollID uuid.UUID
+	Votes  pgtype.Int4
 }
