@@ -6,12 +6,12 @@ function Home() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const createPoll = async () => {
-    const response = await fetch("/api/poll", {
+    const response = await fetch("/api/polls", {
       method: "POST",
       body: JSON.stringify({ name }),
     });
     const pollData = await response.json();
-    navigate(`/poll/${pollData.id}`);
+    navigate(`/polls/${pollData.id}`);
   };
   return (
     <div>

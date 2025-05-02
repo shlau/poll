@@ -19,8 +19,8 @@ SELECT * FROM questions WHERE questions.poll_id = ($1);
 -- name: GetPoll :one
 SELECT * FROM polls WHERE id = ($1);
 
--- name: Upvote :exec
-UPDATE questions SET votes = votes + 1 WHERE questions.id = ($1);
+-- name: Upvote :one
+UPDATE questions SET votes = votes + 1 WHERE questions.id = ($1) RETURNING *;
 
--- name: Downvote :exec
-UPDATE questions SET votes = votes - 1 WHERE questions.id = ($1);
+-- name: Downvote :one
+UPDATE questions SET votes = votes - 1 WHERE questions.id = ($1) RETURNING *;

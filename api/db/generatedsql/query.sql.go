@@ -59,13 +59,20 @@ func (q *Queries) DeleteQuestion(ctx context.Context, id pgtype.Int8) error {
 	return err
 }
 
-const downvote = `-- name: Downvote :exec
-UPDATE questions SET votes = votes - 1 WHERE questions.id = ($1)
+const downvote = `-- name: Downvote :one
+UPDATE questions SET votes = votes - 1 WHERE questions.id = ($1) RETURNING id, value, poll_id, votes
 `
 
-func (q *Queries) Downvote(ctx context.Context, id pgtype.Int8) error {
-	_, err := q.db.Exec(ctx, downvote, id)
-	return err
+func (q *Queries) Downvote(ctx context.Context, id pgtype.Int8) (Question, error) {
+	row := q.db.QueryRow(ctx, downvote, id)
+	var i Question
+	err := row.Scan(
+		&i.ID,
+		&i.Value,
+		&i.PollID,
+		&i.Votes,
+	)
+	return i, err
 }
 
 const getPoll = `-- name: GetPoll :one
@@ -108,11 +115,18 @@ func (q *Queries) GetPollQuestions(ctx context.Context, pollID uuid.UUID) ([]Que
 	return items, nil
 }
 
-const upvote = `-- name: Upvote :exec
-UPDATE questions SET votes = votes + 1 WHERE questions.id = ($1)
+const upvote = `-- name: Upvote :one
+UPDATE questions SET votes = votes + 1 WHERE questions.id = ($1) RETURNING id, value, poll_id, votes
 `
 
-func (q *Queries) Upvote(ctx context.Context, id pgtype.Int8) error {
-	_, err := q.db.Exec(ctx, upvote, id)
-	return err
+func (q *Queries) Upvote(ctx context.Context, id pgtype.Int8) (Question, error) {
+	row := q.db.QueryRow(ctx, upvote, id)
+	var i Question
+	err := row.Scan(
+		&i.ID,
+		&i.Value,
+		&i.PollID,
+		&i.Votes,
+	)
+	return i, err
 }
