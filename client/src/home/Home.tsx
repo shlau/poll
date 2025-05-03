@@ -1,6 +1,7 @@
 import { Button, TextField } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useMutation } from "@tanstack/react-query";
 
 function Home() {
   const navigate = useNavigate();
@@ -11,8 +12,16 @@ function Home() {
       body: JSON.stringify({ name }),
     });
     const pollData = await response.json();
-    navigate(`/polls/${pollData.id}`);
+    return pollData;
   };
+
+  const mutation = useMutation({
+    mutationFn: createPoll,
+    onSuccess: (data) => {
+      navigate(`/polls/${data.id}`);
+    },
+  });
+
   return (
     <div>
       <TextField
@@ -22,7 +31,13 @@ function Home() {
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
-      <Button variant="contained" disabled={!name} onClick={createPoll}>
+      <Button
+        variant="contained"
+        disabled={!name}
+        onClick={() => {
+          mutation.mutate();
+        }}
+      >
         Create new poll
       </Button>
     </div>
