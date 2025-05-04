@@ -2,6 +2,7 @@ package application
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -30,9 +31,17 @@ type PollRequest struct {
 }
 
 type PollResponse struct {
-	ID        string             `json:"id"`
-	Name      string             `json:"name"`
-	Questions []QuestionResponse `json:"questions"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func getPollId(r *http.Request) (uuid.UUID, error) {
+	id := chi.URLParam(r, "pollId")
+	if id == "" {
+		return uuid.UUID{}, fmt.Errorf("missing poll id")
+	}
+	pollId, err := uuid.Parse(id)
+	return pollId, err
 }
 
 func (app *Application) createPoll(w http.ResponseWriter, r *http.Request) {
@@ -56,18 +65,12 @@ func (app *Application) createPoll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println(createdPoll)
-	res := &PollResponse{ID: createdPoll.ID.String(), Name: createdPoll.Name, Questions: []QuestionResponse{}}
+	res := &PollResponse{ID: createdPoll.ID.String(), Name: createdPoll.Name}
 	render.JSON(w, r, res)
 }
 
 func (app *Application) getPoll(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "pollId")
-	if id == "" {
-		http.Error(w, "missing poll id", http.StatusBadRequest)
-		return
-	}
-
-	pollId, err := uuid.Parse(id)
+	pollId, err := getPollId(r)
 	if err != nil {
 		http.Error(w, "invalid poll id", http.StatusBadRequest)
 		return
@@ -80,28 +83,12 @@ func (app *Application) getPoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	questionsResponse, err := app.queries.GetPollQuestions(r.Context(), pollId)
-	if err != nil {
-		http.Error(w, "error getting poll questions", http.StatusInternalServerError)
-		return
-	}
-	questions := make([]QuestionResponse, len(questionsResponse))
-	for i, question := range questionsResponse {
-		questions[i] = QuestionResponse{ID: int(question.ID.Int64), Value: question.Value, Votes: int(question.Votes.Int32)}
-	}
-
-	res := &PollResponse{ID: pollId.String(), Name: pollResponse.Name, Questions: questions}
+	res := &PollResponse{ID: pollId.String(), Name: pollResponse.Name}
 	render.JSON(w, r, res)
 }
 
 func (app *Application) createQuestion(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "pollId")
-	if id == "" {
-		http.Error(w, "missing poll id", http.StatusBadRequest)
-		return
-	}
-
-	pollId, err := uuid.Parse(id)
+	pollId, err := getPollId(r)
 	if err != nil {
 		http.Error(w, "invalid poll id", http.StatusBadRequest)
 		return
@@ -126,6 +113,25 @@ func (app *Application) createQuestion(w http.ResponseWriter, r *http.Request) {
 	}
 	res := &QuestionResponse{ID: int(q.ID.Int64), Value: q.Value, Votes: int(q.Votes.Int32)}
 	render.JSON(w, r, res)
+}
+
+func (app *Application) getQuestions(w http.ResponseWriter, r *http.Request) {
+	pollId, err := getPollId(r)
+	if err != nil {
+		http.Error(w, "invalid poll id", http.StatusBadRequest)
+		return
+	}
+
+	questionsResponse, err := app.queries.GetPollQuestions(r.Context(), pollId)
+	if err != nil {
+		http.Error(w, "error getting poll questions", http.StatusInternalServerError)
+		return
+	}
+	questions := make([]QuestionResponse, len(questionsResponse))
+	for i, question := range questionsResponse {
+		questions[i] = QuestionResponse{ID: int(question.ID.Int64), Value: question.Value, Votes: int(question.Votes.Int32)}
+	}
+	render.JSON(w, r, &questions)
 }
 
 func (app *Application) toggleVote(w http.ResponseWriter, r *http.Request) {

@@ -1,4 +1,5 @@
 import { Checkbox } from "@mui/material";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 
@@ -11,35 +12,62 @@ interface Question {
 interface PollData {
   id: string;
   name: string;
-  questions: Question[];
 }
 function Poll() {
   let params = useParams();
-  const [questions, setQuestions] = useState([] as Question[]);
-  const [pollName, setPollName] = useState("");
+  // const [questions, setQuestions] = useState([] as Question[]);
+  // const [pollName, setPollName] = useState("");
+  let selectedQuestions = new Set();
+  useEffect(() => {
+    if (params.pollId) {
+      const dataString = localStorage.getItem(params.pollId);
+      if (dataString) {
+        selectedQuestions = new Set(JSON.parse(dataString));
+      }
+    }
+  }, []);
 
-  const toggleVote = async (checked: boolean, questionId: number) => {
-    console.log(`check value: ${checked}, questionId: ${questionId}`);
-    const response = await fetch(`/api/questions/${questionId}/vote`, {
+  const queryClient = useQueryClient();
+  const toggleVote = async (question: any) => {
+    const newCheckedVal = !question.checked;
+    console.log(`check value: ${newCheckedVal}, questionId: ${question.id}`);
+    const response = await fetch(`/api/questions/${question.id}/vote`, {
       method: "PATCH",
-      body: JSON.stringify({ checked }),
+      body: JSON.stringify({ checked: newCheckedVal }),
     });
-    const data = await response.json();
-    const selectedQuestions: number[] = [];
-    const updatedQuestions = questions.map((question) => {
-      let newQuestion = { ...question };
-      if (question.id === data.id) {
-        newQuestion = { ...data, checked };
-      }
-      if (newQuestion.checked) {
-        selectedQuestions.push(question.id);
-      }
-      return newQuestion;
-    });
+    if (newCheckedVal) {
+      selectedQuestions.add(question.id);
+    } else {
+      selectedQuestions.delete(question.id);
+    }
     if (params.pollId) {
       localStorage.setItem(params.pollId, JSON.stringify(selectedQuestions));
     }
-    setQuestions(updatedQuestions);
+
+    const data = await response.json();
+    return data;
+  };
+
+  const getQuestions = async (): Promise<Question[]> => {
+    const response = await fetch(`/api/polls/${params.pollId}/questions`, {
+      method: "GET",
+    });
+    const data = await response.json();
+    // let selectedQuestions: Set<number> | null = null;
+    // if (params.pollId) {
+    //   const dataString = localStorage.getItem(params.pollId);
+    //   if (dataString) {
+    //     selectedQuestions = new Set(JSON.parse(dataString));
+    //   }
+    // }
+    // const questionData = data.questions.map((question: any) => {
+    //   const pollQuestion = { ...question, checked: false };
+    //   if (selectedQuestions) {
+    //     pollQuestion.checked = selectedQuestions.has(question.id);
+    //   }
+    //   return pollQuestion;
+    // });
+    return data;
   };
 
   const getPollData = async (): Promise<PollData> => {
@@ -47,53 +75,90 @@ function Poll() {
       method: "GET",
     });
     const data = await response.json();
+    // let selectedQuestions: Set<number> | null = null;
+    // if (params.pollId) {
+    //   const dataString = localStorage.getItem(params.pollId);
+    //   if (dataString) {
+    //     selectedQuestions = new Set(JSON.parse(dataString));
+    //   }
+    // }
+    // const questionData = data.questions.map((question: any) => {
+    //   const pollQuestion = { ...question, checked: false };
+    //   if (selectedQuestions) {
+    //     pollQuestion.checked = selectedQuestions.has(question.id);
+    //   }
+    //   return pollQuestion;
+    // });
     return data;
   };
-  // const pollQuery = useQuery({ queryKey: ["poll"], queryFn: getPollData });
+  const pollQuery = useQuery({ queryKey: ["poll"], queryFn: getPollData });
+  const questionsQuery = useQuery({
+    queryKey: ["questions"],
+    queryFn: getQuestions,
+  });
+  // const onVoteMutation = async (currentQuestion: any) => {
+  //   await queryClient.cancelQueries({ queryKey: ["questions"] });
+  //   const previousQuestions = queryClient.getQueryData(["questions"]);
+  //   queryClient.setQueryData(["questions"], (oldQuestions: any) => {
+  //     const newCheckedVal = !currentQuestion.checked;
+  //     return oldQuestions.map((question: any) => {
+  //       let newQuestion = { ...question };
+  //       if (currentQuestion.id === question.id) {
+  //         newQuestion.votes = newQuestion.votes + (newCheckedVal ? 1 : -1);
+  //       }
+  //       return newQuestion;
+  //     });
+  //   });
+  //   return { previousQuestions };
+  // };
 
-  useEffect(() => {
-    getPollData()
-      .then((data) => {
-        let selectedQuestions: Set<number> | null = null;
-        if (params.pollId) {
-          const dataString = localStorage.getItem(params.pollId);
-          if (dataString) {
-            selectedQuestions = new Set(JSON.parse(dataString));
-          }
-        }
+  // const voteMutation = useMutation({
+  //   mutationFn: toggleVote,
+  //   onMutate: onVoteMutation,
+  //   onSettled: () => {
+  //     queryClient.invalidateQueries({ queryKey: ["questions"] });
+  //   },
+  // });
+  // useEffect(() => {
+  //   getPollData()
+  //     .then((data) => {
+  //       let selectedQuestions: Set<number> | null = null;
+  //       if (params.pollId) {
+  //         const dataString = localStorage.getItem(params.pollId);
+  //         if (dataString) {
+  //           selectedQuestions = new Set(JSON.parse(dataString));
+  //         }
+  //       }
 
-        const questionData = data.questions.map((question) => {
-          const pollQuestion = { ...question, checked: false };
-          if (selectedQuestions) {
-            pollQuestion.checked = selectedQuestions.has(question.id);
-          }
-          return pollQuestion;
-        });
-        setPollName(data.name);
-        setQuestions(questionData);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
+  //       const questionData = data.questions.map((question) => {
+  //         const pollQuestion = { ...question, checked: false };
+  //         if (selectedQuestions) {
+  //           pollQuestion.checked = selectedQuestions.has(question.id);
+  //         }
+  //         return pollQuestion;
+  //       });
+  //       setPollName(data.name);
+  //       setQuestions(questionData);
+  //     })
+  //     .catch((err) => {
+  //       console.log(err);
+  //     });
+  // }, []);
 
   return (
     <div>
-      <h1>{pollName}</h1>
-      <ul>
-        {questions.map((question) => {
+      <h1>{pollQuery.data?.name}</h1>
+      <div>
+        {questionsQuery.data?.map((q) => {
           return (
-            <li key={question.id}>
-              <div>{question.value}</div>
-              <div>{question.votes}</div>
-              <Checkbox
-                onChange={() => toggleVote(!question.checked, question.id)}
-                checked={question.checked}
-              />
+            <li key={q.id}>
+              <div>{q.id}</div>
+              <div>{q.value}</div>
+              <Checkbox></Checkbox>
             </li>
           );
         })}
-      </ul>
+      </div>
     </div>
   );
 }

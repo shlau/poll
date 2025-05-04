@@ -28,11 +28,11 @@ func main() {
 		return nil
 	}
 	ctx := context.Background()
-	conn, err := pgx.Connect(ctx, connUrl)
+	pool, err := pgxpool.New(ctx, connUrl)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer conn.Close(ctx)
+	defer pool.Close()
 
-	application.NewServer(conn)
+	application.NewServer(pool)
 }

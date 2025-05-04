@@ -6,6 +6,7 @@ func (app *Application) routes() *chi.Mux {
 	r := chi.NewRouter()
 	r.Post("/polls", app.createPoll)
 	r.Get("/polls/{pollId}", app.getPoll)
+	r.Get("/polls/{pollId}/questions", app.getQuestions)
 	r.Post("/polls/{pollId}/questions", app.createQuestion)
 	r.Patch("/questions/{questionId}/vote", app.toggleVote)
 	return r
