@@ -17,13 +17,11 @@ function Poll() {
   let params = useParams();
   const [inputText, setInputText] = useState("");
   const [selectedQuestions, setSelectedQuestions] = useState(new Set());
-  // const [questions, setQuestions] = useState([] as Question[]);
-  // const [pollName, setPollName] = useState("");
   useEffect(() => {
     if (params.pollId) {
       const dataString = localStorage.getItem(params.pollId);
       if (dataString) {
-        setSelectedQuestions(new Set(Array.from(JSON.parse(dataString))));
+        setSelectedQuestions(new Set(JSON.parse(dataString)));
       }
     }
   }, []);
@@ -38,7 +36,10 @@ function Poll() {
       body: JSON.stringify({ checked }),
     });
     if (params.pollId) {
-      localStorage.setItem(params.pollId, JSON.stringify(selectedQuestions));
+      localStorage.setItem(
+        params.pollId,
+        JSON.stringify(Array.from(selectedQuestions))
+      );
     }
 
     const data = await response.json();
@@ -50,20 +51,6 @@ function Poll() {
       method: "GET",
     });
     const data = await response.json();
-    // let selectedQuestions: Set<number> | null = null;
-    // if (params.pollId) {
-    //   const dataString = localStorage.getItem(params.pollId);
-    //   if (dataString) {
-    //     selectedQuestions = new Set(JSON.parse(dataString));
-    //   }
-    // }
-    // const questionData = data.questions.map((question: any) => {
-    //   const pollQuestion = { ...question, checked: false };
-    //   if (selectedQuestions) {
-    //     pollQuestion.checked = selectedQuestions.has(question.id);
-    //   }
-    //   return pollQuestion;
-    // });
     return data.sort((a: any, b: any) => a.id - b.id);
   };
 
@@ -72,20 +59,6 @@ function Poll() {
       method: "GET",
     });
     const data = await response.json();
-    // let selectedQuestions: Set<number> | null = null;
-    // if (params.pollId) {
-    //   const dataString = localStorage.getItem(params.pollId);
-    //   if (dataString) {
-    //     selectedQuestions = new Set(JSON.parse(dataString));
-    //   }
-    // }
-    // const questionData = data.questions.map((question: any) => {
-    //   const pollQuestion = { ...question, checked: false };
-    //   if (selectedQuestions) {
-    //     pollQuestion.checked = selectedQuestions.has(question.id);
-    //   }
-    //   return pollQuestion;
-    // });
     return data;
   };
   const pollQuery = useQuery({ queryKey: ["poll"], queryFn: getPollData });
@@ -117,8 +90,11 @@ function Poll() {
       selectedQuestions.add(currentQuestion.id);
     }
     if (params.pollId) {
+      localStorage.setItem(
+        params.pollId,
+        JSON.stringify(Array.from(selectedQuestions))
+      );
       setSelectedQuestions(new Set(selectedQuestions));
-      localStorage.setItem(params.pollId, JSON.stringify(selectedQuestions));
     }
     await queryClient.cancelQueries({ queryKey: ["questions"] });
     const previousQuestions = queryClient.getQueryData(["questions"]);
@@ -140,45 +116,13 @@ function Poll() {
   const toggleVoteMutation = useMutation({
     mutationFn: toggleVote,
     onMutate: onVoteMutation,
-    onError: (err, newTodo, context) => {
+    onError: (_err, _newTodo, context) => {
       queryClient.setQueryData(["questions"], context?.previousQuestions);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["questions"] });
     },
   });
-  // const voteMutation = useMutation({
-  //   mutationFn: toggleVote,
-  //   onMutate: onVoteMutation,
-  //   onSettled: () => {
-  //     queryClient.invalidateQueries({ queryKey: ["questions"] });
-  //   },
-  // });
-  // useEffect(() => {
-  //   getPollData()
-  //     .then((data) => {
-  //       let selectedQuestions: Set<number> | null = null;
-  //       if (params.pollId) {
-  //         const dataString = localStorage.getItem(params.pollId);
-  //         if (dataString) {
-  //           selectedQuestions = new Set(JSON.parse(dataString));
-  //         }
-  //       }
-
-  //       const questionData = data.questions.map((question) => {
-  //         const pollQuestion = { ...question, checked: false };
-  //         if (selectedQuestions) {
-  //           pollQuestion.checked = selectedQuestions.has(question.id);
-  //         }
-  //         return pollQuestion;
-  //       });
-  //       setPollName(data.name);
-  //       setQuestions(questionData);
-  //     })
-  //     .catch((err) => {
-  //       console.log(err);
-  //     });
-  // }, []);
 
   return (
     <div className="poll-container">
