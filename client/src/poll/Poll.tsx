@@ -2,12 +2,12 @@ import { Checkbox } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
+import "./Poll.less";
 
 interface Question {
   id: number;
   value: string;
   votes: number;
-  checked: boolean;
 }
 interface PollData {
   id: string;
@@ -15,31 +15,28 @@ interface PollData {
 }
 function Poll() {
   let params = useParams();
+  const [inputText, setInputText] = useState("");
+  const [selectedQuestions, setSelectedQuestions] = useState(new Set());
   // const [questions, setQuestions] = useState([] as Question[]);
   // const [pollName, setPollName] = useState("");
-  let selectedQuestions = new Set();
   useEffect(() => {
     if (params.pollId) {
       const dataString = localStorage.getItem(params.pollId);
       if (dataString) {
-        selectedQuestions = new Set(JSON.parse(dataString));
+        setSelectedQuestions(new Set(Array.from(JSON.parse(dataString))));
       }
     }
   }, []);
 
   const queryClient = useQueryClient();
   const toggleVote = async (question: any) => {
-    const newCheckedVal = !question.checked;
-    console.log(`check value: ${newCheckedVal}, questionId: ${question.id}`);
+    const checked = selectedQuestions.has(question.id);
+
+    console.log(`check value: ${checked}, questionId: ${question.id}`);
     const response = await fetch(`/api/questions/${question.id}/vote`, {
       method: "PATCH",
-      body: JSON.stringify({ checked: newCheckedVal }),
+      body: JSON.stringify({ checked }),
     });
-    if (newCheckedVal) {
-      selectedQuestions.add(question.id);
-    } else {
-      selectedQuestions.delete(question.id);
-    }
     if (params.pollId) {
       localStorage.setItem(params.pollId, JSON.stringify(selectedQuestions));
     }
@@ -67,7 +64,7 @@ function Poll() {
     //   }
     //   return pollQuestion;
     // });
-    return data;
+    return data.sort((a: any, b: any) => a.id - b.id);
   };
 
   const getPollData = async (): Promise<PollData> => {
@@ -96,22 +93,60 @@ function Poll() {
     queryKey: ["questions"],
     queryFn: getQuestions,
   });
-  // const onVoteMutation = async (currentQuestion: any) => {
-  //   await queryClient.cancelQueries({ queryKey: ["questions"] });
-  //   const previousQuestions = queryClient.getQueryData(["questions"]);
-  //   queryClient.setQueryData(["questions"], (oldQuestions: any) => {
-  //     const newCheckedVal = !currentQuestion.checked;
-  //     return oldQuestions.map((question: any) => {
-  //       let newQuestion = { ...question };
-  //       if (currentQuestion.id === question.id) {
-  //         newQuestion.votes = newQuestion.votes + (newCheckedVal ? 1 : -1);
-  //       }
-  //       return newQuestion;
-  //     });
-  //   });
-  //   return { previousQuestions };
-  // };
+  const createQuestion = async () => {
+    const response = await fetch(`/api/polls/${params.pollId}/questions`, {
+      method: "POST",
+      body: JSON.stringify({ value: inputText }),
+    });
+    const data = await response.json();
+    return data;
+  };
 
+  const createQuestionMutation = useMutation({
+    mutationFn: createQuestion,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["questions"] });
+    },
+  });
+  const onVoteMutation = async (currentQuestion: any) => {
+    let checked = true;
+    if (selectedQuestions.has(currentQuestion.id)) {
+      checked = false;
+      selectedQuestions.delete(currentQuestion.id);
+    } else {
+      selectedQuestions.add(currentQuestion.id);
+    }
+    if (params.pollId) {
+      setSelectedQuestions(new Set(selectedQuestions));
+      localStorage.setItem(params.pollId, JSON.stringify(selectedQuestions));
+    }
+    await queryClient.cancelQueries({ queryKey: ["questions"] });
+    const previousQuestions = queryClient.getQueryData(["questions"]);
+    queryClient.setQueryData(["questions"], (oldQuestions: any) => {
+      const newQuestions = oldQuestions
+        .map((question: any) => {
+          let newQuestion = { ...question };
+          if (currentQuestion.id === question.id) {
+            newQuestion.votes = newQuestion.votes + (checked ? 1 : -1);
+          }
+          return newQuestion;
+        })
+        .sort((a: any, b: any) => a.id - b.id);
+      return newQuestions;
+    });
+    return { previousQuestions };
+  };
+
+  const toggleVoteMutation = useMutation({
+    mutationFn: toggleVote,
+    onMutate: onVoteMutation,
+    onError: (err, newTodo, context) => {
+      queryClient.setQueryData(["questions"], context?.previousQuestions);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["questions"] });
+    },
+  });
   // const voteMutation = useMutation({
   //   mutationFn: toggleVote,
   //   onMutate: onVoteMutation,
@@ -146,18 +181,34 @@ function Poll() {
   // }, []);
 
   return (
-    <div>
+    <div className="poll-container">
       <h1>{pollQuery.data?.name}</h1>
-      <div>
+      <div className="question-container">
         {questionsQuery.data?.map((q) => {
           return (
             <li key={q.id}>
               <div>{q.id}</div>
               <div>{q.value}</div>
-              <Checkbox></Checkbox>
+              <div>{q.votes}</div>
+              <Checkbox
+                checked={selectedQuestions.has(q.id)}
+                onChange={() => {
+                  toggleVoteMutation.mutate(q);
+                }}
+              ></Checkbox>
             </li>
           );
         })}
+      </div>
+      <div className="new-question-container">
+        <input
+          type="text"
+          value={inputText}
+          onChange={(e) => {
+            setInputText(e.target.value);
+          }}
+        />
+        <button onClick={() => createQuestionMutation.mutate()}>ADD</button>
       </div>
     </div>
   );
