@@ -24,3 +24,12 @@ UPDATE questions SET votes = votes + 1 WHERE questions.id = ($1) RETURNING *;
 
 -- name: Downvote :one
 UPDATE questions SET votes = votes - 1 WHERE questions.id = ($1) RETURNING *;
+
+-- name: CreateComment :one
+INSERT INTO comments (value, question_id, author) VALUES ($1, $2, $3) RETURNING *;
+
+-- name: GetQuestionComments :many
+SELECT * FROM comments WHERE comments.question_id = ($1);
+
+-- name: DeleteComment :exec
+DELETE FROM comments WHERE id = ($1);

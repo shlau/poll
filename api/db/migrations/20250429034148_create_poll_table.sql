@@ -9,6 +9,7 @@ CREATE TABLE polls (
 -- +goose StatementEnd
 -- +goose Down
 -- +goose StatementBegin
+DROP EXTENSION pgcrypto;
 DROP TABLE polls;
 
 -- +goose StatementEnd

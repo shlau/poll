@@ -35,6 +35,17 @@ type PollResponse struct {
 	Name string `json:"name"`
 }
 
+type CommentRequest struct {
+	Value  string `json:"value"`
+	Author string `json:"author"`
+}
+
+type CommentsResponse struct {
+	ID     int    `json:"id"`
+	Value  string `json:"value"`
+	Author string `json:"author"`
+}
+
 func getPollId(r *http.Request) (uuid.UUID, error) {
 	id := chi.URLParam(r, "pollId")
 	if id == "" {
@@ -111,7 +122,7 @@ func (app *Application) createQuestion(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error creating question", http.StatusBadRequest)
 		return
 	}
-	res := &QuestionResponse{ID: int(q.ID.Int64), Value: q.Value, Votes: int(q.Votes.Int32)}
+	res := &QuestionResponse{ID: int(q.ID), Value: q.Value, Votes: int(q.Votes.Int32)}
 	render.JSON(w, r, res)
 }
 
@@ -129,7 +140,7 @@ func (app *Application) getQuestions(w http.ResponseWriter, r *http.Request) {
 	}
 	questions := make([]QuestionResponse, len(questionsResponse))
 	for i, question := range questionsResponse {
-		questions[i] = QuestionResponse{ID: int(question.ID.Int64), Value: question.Value, Votes: int(question.Votes.Int32)}
+		questions[i] = QuestionResponse{ID: int(question.ID), Value: question.Value, Votes: int(question.Votes.Int32)}
 	}
 	render.JSON(w, r, &questions)
 }
@@ -140,7 +151,7 @@ func (app *Application) toggleVote(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "missing question id", http.StatusBadRequest)
 		return
 	}
-	idNum, err := strconv.Atoi(id)
+	questionId, err := strconv.Atoi(id)
 	if err != nil {
 		http.Error(w, "invalid question id", http.StatusBadRequest)
 		return
@@ -158,18 +169,77 @@ func (app *Application) toggleVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	questionId := pgtype.Int8{Int64: int64(idNum), Valid: true}
 	var updatedQuestion generatedsql.Question
 	if data.Checked {
-		updatedQuestion, err = app.queries.Upvote(r.Context(), questionId)
+		updatedQuestion, err = app.queries.Upvote(r.Context(), int64(questionId))
 	} else {
-		updatedQuestion, err = app.queries.Downvote(r.Context(), questionId)
+		updatedQuestion, err = app.queries.Downvote(r.Context(), int64(questionId))
 	}
 	if err != nil {
 		http.Error(w, "error updating vote", http.StatusInternalServerError)
 		return
 
 	}
-	res := &QuestionResponse{ID: idNum, Value: updatedQuestion.Value, Votes: int(updatedQuestion.Votes.Int32)}
+	res := &QuestionResponse{ID: questionId, Value: updatedQuestion.Value, Votes: int(updatedQuestion.Votes.Int32)}
+	render.JSON(w, r, res)
+}
+
+func (app *Application) getQuestionComments(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "questionId")
+	if id == "" {
+		http.Error(w, "missing question id", http.StatusBadRequest)
+		return
+	}
+
+	questionId, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "invalid question id", http.StatusInternalServerError)
+		return
+	}
+	commentsResponse, err := app.queries.GetQuestionComments(r.Context(), pgtype.Int8{Int64: int64(questionId), Valid: true})
+	if err != nil {
+		http.Error(w, "unable to get comments", http.StatusInternalServerError)
+	}
+
+	comments := make([]CommentsResponse, len(commentsResponse))
+	for i, comment := range commentsResponse {
+		comments[i] = CommentsResponse{ID: int(comment.ID), Value: comment.Value, Author: comment.Author}
+	}
+	render.JSON(w, r, &comments)
+}
+
+func (app *Application) createComment(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "questionId")
+	if id == "" {
+		http.Error(w, "missing question id", http.StatusBadRequest)
+		return
+	}
+
+	idNum, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "invalid question id", http.StatusBadRequest)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "error reading request body", http.StatusBadRequest)
+		return
+	}
+
+	var data CommentRequest
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, "error decoding request body", http.StatusBadRequest)
+		return
+	}
+
+	questionId := pgtype.Int8{Int64: int64(idNum), Valid: true}
+	c, err := app.queries.CreateComment(r.Context(), generatedsql.CreateCommentParams{Value: data.Value, Author: data.Author, QuestionID: questionId})
+	if err != nil {
+		http.Error(w, "error creating comment", http.StatusInternalServerError)
+		return
+	}
+	res := &CommentsResponse{ID: int(c.ID), Value: c.Value, Author: c.Author}
 	render.JSON(w, r, res)
 }

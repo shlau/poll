@@ -9,13 +9,20 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Comment struct {
+	ID         int64
+	Value      string
+	Author     string
+	QuestionID pgtype.Int8
+}
+
 type Poll struct {
 	ID   uuid.UUID
 	Name string
 }
 
 type Question struct {
-	ID     pgtype.Int8
+	ID     int64
 	Value  string
 	PollID uuid.UUID
 	Votes  pgtype.Int4

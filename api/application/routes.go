@@ -9,5 +9,7 @@ func (app *Application) routes() *chi.Mux {
 	r.Get("/polls/{pollId}/questions", app.getQuestions)
 	r.Post("/polls/{pollId}/questions", app.createQuestion)
 	r.Patch("/questions/{questionId}/vote", app.toggleVote)
+	r.Get("/questions/{questionId}/comments", app.getQuestionComments)
+	r.Post("/questions/{questionId}/comments", app.createComment)
 	return r
 }

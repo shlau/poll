@@ -12,6 +12,28 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createComment = `-- name: CreateComment :one
+INSERT INTO comments (value, question_id, author) VALUES ($1, $2, $3) RETURNING id, value, author, question_id
+`
+
+type CreateCommentParams struct {
+	Value      string
+	QuestionID pgtype.Int8
+	Author     string
+}
+
+func (q *Queries) CreateComment(ctx context.Context, arg CreateCommentParams) (Comment, error) {
+	row := q.db.QueryRow(ctx, createComment, arg.Value, arg.QuestionID, arg.Author)
+	var i Comment
+	err := row.Scan(
+		&i.ID,
+		&i.Value,
+		&i.Author,
+		&i.QuestionID,
+	)
+	return i, err
+}
+
 const createPoll = `-- name: CreatePoll :one
 INSERT INTO
     polls (name)
@@ -50,11 +72,20 @@ func (q *Queries) CreateQuestion(ctx context.Context, arg CreateQuestionParams) 
 	return i, err
 }
 
+const deleteComment = `-- name: DeleteComment :exec
+DELETE FROM comments WHERE id = ($1)
+`
+
+func (q *Queries) DeleteComment(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteComment, id)
+	return err
+}
+
 const deleteQuestion = `-- name: DeleteQuestion :exec
 DELETE FROM questions WHERE questions.id = ($1)
 `
 
-func (q *Queries) DeleteQuestion(ctx context.Context, id pgtype.Int8) error {
+func (q *Queries) DeleteQuestion(ctx context.Context, id int64) error {
 	_, err := q.db.Exec(ctx, deleteQuestion, id)
 	return err
 }
@@ -63,7 +94,7 @@ const downvote = `-- name: Downvote :one
 UPDATE questions SET votes = votes - 1 WHERE questions.id = ($1) RETURNING id, value, poll_id, votes
 `
 
-func (q *Queries) Downvote(ctx context.Context, id pgtype.Int8) (Question, error) {
+func (q *Queries) Downvote(ctx context.Context, id int64) (Question, error) {
 	row := q.db.QueryRow(ctx, downvote, id)
 	var i Question
 	err := row.Scan(
@@ -115,11 +146,40 @@ func (q *Queries) GetPollQuestions(ctx context.Context, pollID uuid.UUID) ([]Que
 	return items, nil
 }
 
+const getQuestionComments = `-- name: GetQuestionComments :many
+SELECT id, value, author, question_id FROM comments WHERE comments.question_id = ($1)
+`
+
+func (q *Queries) GetQuestionComments(ctx context.Context, questionID pgtype.Int8) ([]Comment, error) {
+	rows, err := q.db.Query(ctx, getQuestionComments, questionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Comment
+	for rows.Next() {
+		var i Comment
+		if err := rows.Scan(
+			&i.ID,
+			&i.Value,
+			&i.Author,
+			&i.QuestionID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upvote = `-- name: Upvote :one
 UPDATE questions SET votes = votes + 1 WHERE questions.id = ($1) RETURNING id, value, poll_id, votes
 `
 
-func (q *Queries) Upvote(ctx context.Context, id pgtype.Int8) (Question, error) {
+func (q *Queries) Upvote(ctx context.Context, id int64) (Question, error) {
 	row := q.db.QueryRow(ctx, upvote, id)
 	var i Question
 	err := row.Scan(
