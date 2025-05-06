@@ -4,13 +4,14 @@ import { useParams } from "react-router";
 import "./Poll.less";
 import usePollData from "./usePollData";
 import useQuestions from "./useQuestions";
+import useVotes from "./useVotes";
 
 function Poll() {
   let params = useParams();
   const [inputText, setInputText] = useState("");
   const pollData = usePollData(params.pollId);
-  const { questions, selectedQuestions, toggleVote, createQuestion } =
-    useQuestions(params.pollId);
+  const { questions, createQuestion } = useQuestions(params.pollId);
+  const { selectedQuestions, toggleVote } = useVotes(params.pollId);
 
   return (
     <div className="poll-container">
@@ -21,7 +22,6 @@ function Poll() {
             <li key={q.id}>
               <div>{q.id}</div>
               <div>{q.value}</div>
-              <div>{q.votes}</div>
               <Checkbox
                 checked={selectedQuestions.has(q.id)}
                 onChange={() => {
