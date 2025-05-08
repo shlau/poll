@@ -9,13 +9,21 @@ import useVotes from "./useVotes";
 function Poll() {
   let params = useParams();
   const [inputText, setInputText] = useState("");
-  const pollData = usePollData(params.pollId);
+  const { data, isError, isPending } = usePollData(params.pollId);
   const { questions, createQuestion } = useQuestions(params.pollId);
   const { selectedQuestions, toggleVote } = useVotes(params.pollId);
 
+  if (isPending) {
+    return <span>Loading...</span>;
+  }
+
+  if (isError) {
+    return <div> An error occured</div>;
+  }
+
   return (
     <div className="poll-container">
-      <h1>{pollData?.name}</h1>
+      <h1>{data?.name}</h1>
       <div className="question-container">
         {questions?.map((q) => {
           return (

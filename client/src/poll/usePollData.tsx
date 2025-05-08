@@ -13,6 +13,6 @@ function usePollData(pollId?: string) {
     return data;
   };
   const pollQuery = useQuery({ queryKey: ["poll"], queryFn: getPollData });
-  return pollQuery.data;
+  return pollQuery;
 }
 export default usePollData;
