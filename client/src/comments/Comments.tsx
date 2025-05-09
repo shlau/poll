@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useComments from "./useComments";
-import "./Comments.less"
+import "./Comments.less";
 
 interface CommentsProps {
   questionId: number;
@@ -11,6 +11,10 @@ function Comments({ questionId, questionValue }: CommentsProps) {
   const { commentsQuery, createComment } = useComments(questionId);
   const [author, setAuthor] = useState("");
   const [commentValue, setCommentValue] = useState("");
+
+  useEffect(() => {
+    commentsQuery.refetch();
+  }, [questionId]);
 
   if (commentsQuery.isPending) {
     return <span>Loading...</span>;
