@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-interface Comment {
+export interface QuestionComment {
   id?: string;
   value: string;
   author: string;
 }
 function useComments(questionId: number) {
   const queryClient = useQueryClient();
-  const getComments = async (): Promise<Comment[]> => {
+  const getComments = async (): Promise<QuestionComment[]> => {
     const response = await fetch(`/api/questions/${questionId}/comments`, {
       method: "GET",
     });
@@ -19,7 +19,7 @@ function useComments(questionId: number) {
     queryFn: getComments,
   });
 
-  const createComment = async (comment: Comment): Promise<Comment> => {
+  const createComment = async (comment: QuestionComment): Promise<QuestionComment> => {
     const response = await fetch(`/api/questions/${questionId}/comments`, {
       method: "POST",
       body: JSON.stringify({ value: comment.value, author: comment.author }),
@@ -28,7 +28,7 @@ function useComments(questionId: number) {
     return data;
   };
 
-  const onCommentMutation = async (newComment: Comment) => {
+  const onCommentMutation = async (newComment: QuestionComment) => {
     // When mutate is called:
     // Cancel any outgoing refetches
     // (so they don't overwrite our optimistic update)
@@ -38,7 +38,7 @@ function useComments(questionId: number) {
     const previousComments = queryClient.getQueryData(["comments"]);
 
     // Optimistically update to the new value
-    queryClient.setQueryData(["comments"], (old: Comment[]) => {
+    queryClient.setQueryData(["comments"], (old: QuestionComment[]) => {
       const tmpIdx = `${-1 * (old.length + 1)}`;
       return [...old, { ...newComment, id: tmpIdx }];
     });

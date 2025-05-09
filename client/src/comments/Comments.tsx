@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import useComments from "./useComments";
+import useComments, { QuestionComment } from "./useComments";
 import "./Comments.less";
 
 interface CommentsProps {
@@ -13,8 +13,16 @@ function Comments({ questionId, questionValue }: CommentsProps) {
   const [commentValue, setCommentValue] = useState("");
 
   useEffect(() => {
+    setAuthor("");
+    setCommentValue("");
     commentsQuery.refetch();
   }, [questionId]);
+
+  const handleCreateComment = (newComment: QuestionComment) => {
+    createComment(newComment);
+    setAuthor("");
+    setCommentValue("");
+  };
 
   if (commentsQuery.isPending) {
     return <span>Loading...</span>;
@@ -54,7 +62,7 @@ function Comments({ questionId, questionValue }: CommentsProps) {
             setCommentValue(e.target.value);
           }}
         />
-        <button onClick={() => createComment({ value: commentValue, author })}>
+        <button onClick={() => handleCreateComment({ value: commentValue, author })}>
           ADD COMMENT
         </button>
       </div>
