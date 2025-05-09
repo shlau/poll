@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import useComments, { QuestionComment } from "./useComments";
 import "./Comments.less";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CommentsProps {
   questionId: number;
@@ -11,11 +12,12 @@ function Comments({ questionId, questionValue }: CommentsProps) {
   const { commentsQuery, createComment } = useComments(questionId);
   const [author, setAuthor] = useState("");
   const [commentValue, setCommentValue] = useState("");
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     setAuthor("");
     setCommentValue("");
-    commentsQuery.refetch();
+    queryClient.setQueryData([`comments-${questionId}`], (old: any) => old);
   }, [questionId]);
 
   const handleCreateComment = (newComment: QuestionComment) => {
@@ -62,7 +64,9 @@ function Comments({ questionId, questionValue }: CommentsProps) {
             setCommentValue(e.target.value);
           }}
         />
-        <button onClick={() => handleCreateComment({ value: commentValue, author })}>
+        <button
+          onClick={() => handleCreateComment({ value: commentValue, author })}
+        >
           ADD COMMENT
         </button>
       </div>

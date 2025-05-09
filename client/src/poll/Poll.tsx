@@ -14,7 +14,9 @@ function Poll() {
   const [selectedQuestionComments, setSelectedQuestionComments] =
     useState<null | Question>(null);
   const { data, isError, isPending } = usePollData(params.pollId);
-  const { questions, createQuestion } = useQuestions(params.pollId);
+  const { questions, createQuestion } = useQuestions(
+    params.pollId
+  );
   const { selectedQuestions, toggleVote } = useVotes(params.pollId);
 
   if (isPending) {

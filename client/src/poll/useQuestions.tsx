@@ -8,7 +8,6 @@ export interface Question {
 
 function useQuestions(pollId?: string) {
   const queryClient = useQueryClient();
-
   const getQuestions = async (): Promise<Question[]> => {
     const response = await fetch(`/api/polls/${pollId}/questions`, {
       method: "GET",
