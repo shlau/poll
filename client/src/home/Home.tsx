@@ -2,6 +2,7 @@ import { Button, TextField } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useMutation } from "@tanstack/react-query";
+import "./Home.less"
 
 function Home() {
   const navigate = useNavigate();
@@ -23,10 +24,10 @@ function Home() {
   });
 
   return (
-    <div>
+    <div className="homepage">
       <TextField
         id="outlined-basic"
-        label="Outlined"
+        label="Poll title"
         variant="outlined"
         value={name}
         onChange={(e) => setName(e.target.value)}

@@ -17,7 +17,10 @@ function Comments({ questionId, questionValue }: CommentsProps) {
   useEffect(() => {
     setAuthor("");
     setCommentValue("");
-    queryClient.setQueryData([`comments-${questionId}`], (old: any) => old);
+    queryClient.setQueryData(
+      [`comments-${questionId}`],
+      (old: Comment[]) => old
+    );
   }, [questionId]);
 
   const handleCreateComment = (newComment: QuestionComment) => {

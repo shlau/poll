@@ -1,4 +1,4 @@
-import { Checkbox, IconButton } from "@mui/material";
+import { Button, Checkbox, IconButton, TextField } from "@mui/material";
 import { useState } from "react";
 import { useParams } from "react-router";
 import "./Poll.less";
@@ -14,9 +14,7 @@ function Poll() {
   const [selectedQuestionComments, setSelectedQuestionComments] =
     useState<null | Question>(null);
   const { data, isError, isPending } = usePollData(params.pollId);
-  const { questions, createQuestion } = useQuestions(
-    params.pollId
-  );
+  const { questions, createQuestion } = useQuestions(params.pollId);
   const { selectedQuestions, toggleVote } = useVotes(params.pollId);
 
   if (isPending) {
@@ -68,16 +66,22 @@ function Poll() {
             })}
           </div>
           <div className="new-question-container">
-            <input
-              type="text"
+            <TextField
+              id="outlined-basic"
+              label="Enter your question"
+              variant="outlined"
               value={inputText}
-              onChange={(e) => {
-                setInputText(e.target.value);
-              }}
+              onChange={(e) => setInputText(e.target.value)}
             />
-            <button onClick={() => createQuestion({ value: inputText })}>
-              ADD QUESTION
-            </button>
+            <Button
+              variant="contained"
+              disabled={!inputText}
+              onClick={() => {
+                createQuestion({ value: inputText });
+              }}
+            >
+              Add Question
+            </Button>
           </div>
         </div>
       </div>
