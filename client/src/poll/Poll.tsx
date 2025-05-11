@@ -1,4 +1,10 @@
-import { Button, Checkbox, IconButton, TextField } from "@mui/material";
+import {
+  Button,
+  Checkbox,
+  IconButton,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useState } from "react";
 import { useParams } from "react-router";
 import "./Poll.less";
@@ -27,61 +33,67 @@ function Poll() {
 
   return (
     <div className="poll-container">
-      <h1>{data?.name}</h1>
-      <div className="content">
+      <div className="comments-section">
         {selectedQuestionComments && (
           <Comments
             questionId={selectedQuestionComments?.id}
             questionValue={selectedQuestionComments?.value}
           ></Comments>
         )}
-        <div className="questions-container">
-          <div className="question-list-container">
-            {questions?.map((q) => {
-              return (
-                <li key={q.id}>
-                  <IconButton
-                    aria-label="comment"
-                    onClick={() =>
-                      setSelectedQuestionComments((prev) => {
-                        if (prev?.id === q.id) {
-                          return null;
+      </div>
+      <div className="questions-section">
+        <Typography variant="h3">{data?.name}</Typography>
+        <div className="content">
+          <div className="questions-container">
+            <div className="question-list-container">
+              {questions?.map((q) => {
+                return (
+                  <li key={q.id}>
+                    <div className="question-content">
+                      <IconButton
+                        aria-label="comment"
+                        onClick={() =>
+                          setSelectedQuestionComments((prev) => {
+                            if (prev?.id === q.id) {
+                              return null;
+                            }
+                            return q;
+                          })
                         }
-                        return q;
-                      })
-                    }
-                  >
-                    <CommentIcon />
-                  </IconButton>
-                  <div>{q.id}</div>
-                  <div>{q.value}</div>
-                  <Checkbox
-                    checked={selectedQuestions.has(q.id)}
-                    onChange={() => {
-                      toggleVote(q);
-                    }}
-                  ></Checkbox>
-                </li>
-              );
-            })}
-          </div>
-          <div className="new-question-container">
-            <TextField
-              id="outlined-basic"
-              label="Enter your question"
-              variant="outlined"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-            />
-            <Button
-              variant="contained"
-              disabled={!inputText}
-              onClick={() => {
-                createQuestion({ value: inputText });
-              }}
-            >
-              Add Question
-            </Button>
+                      >
+                        <CommentIcon />
+                      </IconButton>
+                      <div>{q.id}</div>
+                      <Typography variant="body1">{q.value}</Typography>
+                    </div>
+                    <Checkbox
+                      checked={selectedQuestions.has(q.id)}
+                      onChange={() => {
+                        toggleVote(q);
+                      }}
+                    ></Checkbox>
+                  </li>
+                );
+              })}
+            </div>
+            <div className="new-question-container">
+              <TextField
+                id="outlined-basic"
+                label="Enter your question"
+                variant="outlined"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+              />
+              <Button
+                variant="contained"
+                disabled={!inputText}
+                onClick={() => {
+                  createQuestion({ value: inputText });
+                }}
+              >
+                Add Question
+              </Button>
+            </div>
           </div>
         </div>
       </div>

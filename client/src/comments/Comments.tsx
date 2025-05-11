@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import useComments, { QuestionComment } from "./useComments";
 import "./Comments.less";
 import { useQueryClient } from "@tanstack/react-query";
+import { Button, TextField, Typography } from "@mui/material";
 
 interface CommentsProps {
   questionId: number;
@@ -39,8 +40,7 @@ function Comments({ questionId, questionValue }: CommentsProps) {
 
   return (
     <div className="comments-container">
-      <div>{questionId}</div>
-      <div>{questionValue}</div>
+      <Typography variant="h5">{questionValue}</Typography>
       <ul>
         {commentsQuery.data?.map((comment) => {
           return (
@@ -51,27 +51,27 @@ function Comments({ questionId, questionValue }: CommentsProps) {
         })}
       </ul>
       <div className="create-comment-inputs">
-        <input
-          type="text"
+        <TextField
+          id="outlined-basic"
+          label="Username"
+          variant="outlined"
           value={author}
-          placeholder="Username"
-          onChange={(e) => {
-            setAuthor(e.target.value);
-          }}
+          onChange={(e) => setAuthor(e.target.value)}
         />
-        <input
-          placeholder="Comment"
-          type="text"
+        <TextField
+          id="outlined-basic"
+          label="Comment"
+          variant="outlined"
           value={commentValue}
-          onChange={(e) => {
-            setCommentValue(e.target.value);
-          }}
+          onChange={(e) => setCommentValue(e.target.value)}
         />
-        <button
+        <Button
+          variant="contained"
+          disabled={!(commentValue && author)}
           onClick={() => handleCreateComment({ value: commentValue, author })}
         >
-          ADD COMMENT
-        </button>
+          Add Question
+        </Button>
       </div>
     </div>
   );
