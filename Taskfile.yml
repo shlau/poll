@@ -1,0 +1,45 @@
+# https://taskfile.dev
+version: '3'
+
+dotenv: ['.env']
+
+vars:
+  GREETING: Hello, World!
+  DEV_COMPOSE_FILE: docker-compose-dev.yml
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.GREETING}}"
+  postgres:
+    cmds:
+      - docker run -it --name poll-db-1 -p 5432:5432 -e POSTGRES_USER={{.POSTGRES_USER}} -e POSTGRES_PASSWORD={{.POSTGRES_PASSWORD}} -d postgres:12.19-alpine 
+  createdb:
+    cmds:
+      - docker exec -it poll-db-1 createdb --username={{.POSTGRES_USER}} --owner={{.POSTGRES_USER}} poll-app
+  dropdb:
+    cmds:
+      - docker exec -it poll-db-1 dropdb --username={{.POSTGRES_USER}} poll-app
+  migrate-up:
+    cmds:
+      - migrate -path api/db/migration/ -database postgres://{{.POSTGRES_USER}}:{{.POSTGRES_PASSWORD}}@localhost:5432/poll?sslmode=disable -verbose up
+  migrate-down:
+    cmds:
+      - migrate -path api/db/migration/ -database postgres://{{.POSTGRES_USER}}:{{.POSTGRES_PASSWORD}}@localhost:5432/poll?sslmode=disable -verbose down
+  dev-compose-up:
+    cmds:
+      - docker compose -f {{.DEV_COMPOSE_FILE}} up
+  dev-compose-up-build:
+    cmds:
+      - docker compose -f {{.DEV_COMPOSE_FILE}} up --build
+  dev-compose-down:
+    cmds:
+      - docker compose -f {{.DEV_COMPOSE_FILE}} down
+  postgres-down:
+    cmds:
+      - sudo systemctl stop postgresql	
+  dev-down:
+    cmds:
+      - task: dev-compose-down
+      - task: postgres-down
+    
