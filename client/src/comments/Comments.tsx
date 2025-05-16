@@ -41,37 +41,39 @@ function Comments({ questionId, questionValue }: CommentsProps) {
   return (
     <div className="comments-container">
       <Typography variant="h5">{questionValue}</Typography>
-      <ul>
-        {commentsQuery.data?.map((comment) => {
-          return (
-            <li key={comment.id}>
-              {comment.author}:{comment.value}
-            </li>
-          );
-        })}
-      </ul>
-      <div className="create-comment-inputs">
-        <TextField
-          id="outlined-basic"
-          label="Username"
-          variant="outlined"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-        />
-        <TextField
-          id="outlined-basic"
-          label="Comment"
-          variant="outlined"
-          value={commentValue}
-          onChange={(e) => setCommentValue(e.target.value)}
-        />
-        <Button
-          variant="contained"
-          disabled={!(commentValue && author)}
-          onClick={() => handleCreateComment({ value: commentValue, author })}
-        >
-          Add Question
-        </Button>
+      <div className="comments-content">
+        <ul>
+          {commentsQuery.data?.map((comment) => {
+            return (
+              <li key={comment.id}>
+                {comment.author}:{comment.value}
+              </li>
+            );
+          })}
+        </ul>
+        <div className="create-comment-inputs">
+          <TextField
+            id="outlined-basic"
+            label="Username"
+            variant="outlined"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+          />
+          <TextField
+            id="outlined-basic"
+            label="Comment"
+            variant="outlined"
+            value={commentValue}
+            onChange={(e) => setCommentValue(e.target.value)}
+          />
+          <Button
+            variant="contained"
+            disabled={!(commentValue && author)}
+            onClick={() => handleCreateComment({ value: commentValue, author })}
+          >
+            Add a comment
+          </Button>
+        </div>
       </div>
     </div>
   );

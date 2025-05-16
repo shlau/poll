@@ -1,13 +1,24 @@
 .comments-container {
+  height: 95%;
+  width: 500px;
+
   ul {
     list-style: none;
   }
-     .create-comment-inputs {
-        display: flex;
-        flex-direction: column;
 
-        .MuiTextField-root {
-          padding: 5px;
-        }
-     }
+  .comments-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+  }
+
+  .create-comment-inputs {
+    display: flex;
+    flex-direction: column;
+
+    .MuiTextField-root {
+      padding: 5px;
+    }
+  }
 }

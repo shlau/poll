@@ -33,7 +33,11 @@ function Poll() {
 
   return (
     <div className="poll-container">
-      <div className="comments-section">
+      <div
+        className={`comments-section ${
+          selectedQuestionComments ? "visible" : "hidden"
+        }`}
+      >
         {selectedQuestionComments && (
           <Comments
             questionId={selectedQuestionComments?.id}
@@ -63,7 +67,6 @@ function Poll() {
                       >
                         <CommentIcon />
                       </IconButton>
-                      <div>{q.id}</div>
                       <Typography variant="body1">{q.value}</Typography>
                     </div>
                     <Checkbox
