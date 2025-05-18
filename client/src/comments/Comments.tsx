@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 import useComments, { QuestionComment } from "./useComments";
 import "./Comments.less";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  TextField,
+  Typography,
+} from "@mui/material";
 
 interface CommentsProps {
   questionId: number;
@@ -31,7 +37,12 @@ function Comments({ questionId, questionValue }: CommentsProps) {
   };
 
   if (commentsQuery.isPending) {
-    return <span>Loading...</span>;
+    // return <span>Loading...</span>;
+    return (
+      <Box className="loading-container" sx={{ display: "flex" }}>
+        <CircularProgress size="100px"/>
+      </Box>
+    );
   }
 
   if (commentsQuery.isError) {
@@ -45,8 +56,9 @@ function Comments({ questionId, questionValue }: CommentsProps) {
         <ul>
           {commentsQuery.data?.map((comment) => {
             return (
-              <li key={comment.id}>
-                {comment.author}:{comment.value}
+              <li className="comment-wrapper" key={comment.id}>
+                <div className="comment-author">{comment.author}:</div>
+                <div className="comment-value">{comment.value}</div>
               </li>
             );
           })}
