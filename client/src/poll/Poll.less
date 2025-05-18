@@ -11,12 +11,12 @@
   }
 
   .comments-section {
+    display: flex;
     max-width: 500px;
     left: 0px;
     top: 0px;
     margin: 16px;
-    height: 95%;
-    position: absolute;
+    position: relative;
     border: 2px solid #c8d8e4;
 
     &.hidden {
@@ -25,15 +25,21 @@
   }
 
   .questions-section {
+    display: flex;
+    flex-direction: column;
     width: 100%;
     max-width: 1000px;
 
     .content {
       width: 100%;
       display: flex;
+      flex: 1;
       justify-content: center;
 
       .questions-container {
+        display:flex;
+        justify-content: space-between;
+        flex-direction: column;
         width: 100%;
       }
     }
@@ -63,6 +69,7 @@
   }
 
   .new-question-container {
+    margin-bottom: 32px;
     width: 100%;
     display: flex;
     justify-content: center;
@@ -90,12 +97,6 @@
   .poll-container {
     flex-direction: column-reverse;
     align-items: center;
-
-    // .MuiTypography-root {
-    //   &.MuiTypography-body1 {
-    //     max-width: 500px;
-    //   }
-    // }
 
     .questions-section {
       width: 100%;
