@@ -3,6 +3,7 @@ import {
   Checkbox,
   IconButton,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { useState } from "react";
@@ -67,7 +68,9 @@ function Poll() {
                       >
                         <CommentIcon />
                       </IconButton>
-                      <Typography variant="body1">{q.value}</Typography>
+                      <Tooltip title={q.value}>
+                        <Typography variant="body1">{q.value}</Typography>
+                      </Tooltip>
                     </div>
                     <Checkbox
                       checked={selectedQuestions.has(q.id)}
