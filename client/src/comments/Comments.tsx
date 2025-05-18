@@ -37,7 +37,6 @@ function Comments({ questionId, questionValue }: CommentsProps) {
   };
 
   if (commentsQuery.isPending) {
-    // return <span>Loading...</span>;
     return (
       <Box className="loading-container" sx={{ display: "flex" }}>
         <CircularProgress size="100px"/>

@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import "./Poll.less";
 import usePollData from "./usePollData";
 import useQuestions, { Question } from "./useQuestions";
@@ -23,6 +23,7 @@ function Poll() {
   const { data, isError, isPending } = usePollData(params.pollId);
   const { questions, createQuestion } = useQuestions(params.pollId);
   const { selectedQuestions, toggleVote } = useVotes(params.pollId);
+  const navigate = useNavigate();
 
   if (isPending) {
     return <span>Loading...</span>;
@@ -101,6 +102,24 @@ function Poll() {
               </Button>
             </div>
           </div>
+        </div>
+        <div className="footer">
+          <Button
+            onClick={() => {
+              navigate(`/`);
+            }}
+            variant="contained"
+          >
+            Homepage
+          </Button>
+          <Button
+            onClick={() => {
+              navigate(`/polls/${data.id}/results`);
+            }}
+            variant="contained"
+          >
+            View results
+          </Button>
         </div>
       </div>
     </div>

@@ -38,6 +38,8 @@ function useQuestions(pollId?: string) {
   });
 
   return {
+    error: questionsQuery.error,
+    pending: questionsQuery.isPending,
     questions: questionsQuery.data,
     createQuestion: createQuestionMutation.mutate,
   };
