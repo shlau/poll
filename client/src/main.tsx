@@ -5,7 +5,7 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import Poll from "./poll/Poll.tsx";
 import Results from "./results/Results.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createTheme, ThemeOptions, ThemeProvider } from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material";
 
 const theme = createTheme({
   palette: {

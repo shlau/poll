@@ -1,7 +1,9 @@
 import { useParams } from "react-router";
 import useQuestions from "../poll/useQuestions";
 import { BarChart } from "@mui/x-charts/BarChart";
-import { Box, CircularProgress } from "@mui/material";
+import { Box, CircularProgress, useTheme } from "@mui/material";
+import "./Results.less";
+import { chartsTooltipClasses } from "@mui/x-charts";
 
 function Results() {
   let params = useParams();
@@ -17,22 +19,36 @@ function Results() {
     );
   }
 
+  const theme = useTheme();
+
   return (
     questions && (
       <div className="results-container">
         <BarChart
-          xAxis={[
-            {
-              data: questions.map((q) => q.value),
-            },
-          ]}
+          dataset={questions as any}
+          yAxis={[{ scaleType: "band", dataKey: "value", width: 300 }]}
           series={[
             {
-              data: questions.map((q) => q.votes),
+              dataKey: "votes",
+              label: "Votes",
+              color: theme.palette.primary.light,
             },
           ]}
-          height={400}
-          width={1000}
+          layout="horizontal"
+          slotProps={{
+            tooltip: {
+              sx: {
+                [`&.${chartsTooltipClasses.root} .${chartsTooltipClasses.table} caption`]:
+                  {
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                    whiteSpace: "pre-wrap",
+                    width: "500px !important",
+                    maxHeight: "200px",
+                  },
+              },
+            },
+          }}
         />
       </div>
     )
