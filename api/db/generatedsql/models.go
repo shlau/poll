@@ -27,3 +27,9 @@ type Question struct {
 	PollID uuid.UUID
 	Votes  pgtype.Int4
 }
+
+type User struct {
+	ID           int64
+	Name         pgtype.Text
+	PasswordHash pgtype.Text
+}

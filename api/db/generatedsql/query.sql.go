@@ -72,6 +72,22 @@ func (q *Queries) CreateQuestion(ctx context.Context, arg CreateQuestionParams) 
 	return i, err
 }
 
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (name, password_hash) VALUES ($1, crypt($2, gen_salt('md5'))) RETURNING id
+`
+
+type CreateUserParams struct {
+	Name  pgtype.Text
+	Crypt string
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createUser, arg.Name, arg.Crypt)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const deleteComment = `-- name: DeleteComment :exec
 DELETE FROM comments WHERE id = ($1)
 `

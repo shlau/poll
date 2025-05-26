@@ -33,3 +33,6 @@ SELECT * FROM comments WHERE comments.question_id = ($1);
 
 -- name: DeleteComment :exec
 DELETE FROM comments WHERE id = ($1);
+
+-- name: CreateUser :one
+INSERT INTO users (name, password_hash) VALUES ($1, crypt($2, gen_salt('md5'))) RETURNING id;

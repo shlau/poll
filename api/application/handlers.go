@@ -46,6 +46,11 @@ type CommentsResponse struct {
 	Author string `json:"author"`
 }
 
+type UserRequest struct {
+	Name     string `json:"name"`
+	Password string `json:"password"`
+}
+
 func getPollId(r *http.Request) (uuid.UUID, error) {
 	id := chi.URLParam(r, "pollId")
 	if id == "" {
@@ -242,4 +247,25 @@ func (app *Application) createComment(w http.ResponseWriter, r *http.Request) {
 	}
 	res := &CommentsResponse{ID: int(c.ID), Value: c.Value, Author: c.Author}
 	render.JSON(w, r, res)
+}
+
+func (app *Application) createUser(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "error reading request body", http.StatusBadRequest)
+		return
+	}
+	var data UserRequest
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, "error decoding request body", http.StatusInternalServerError)
+		return
+	}
+	log.Println(data)
+	u, err := app.queries.CreateUser(r.Context(), generatedsql.CreateUserParams{Name: pgtype.Text{String: data.Name, Valid: true}, Crypt: data.Password})
+	if err != nil {
+		http.Error(w, "error creating user", http.StatusInternalServerError)
+		return
+	}
+	render.JSON(w, r, u)
 }
