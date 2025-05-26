@@ -38,7 +38,7 @@ services:
     ports:
       - 3000:3000
   db:
-    image: postgres:12.19-alpine
+    image: postgres:17.5-alpine
     volumes:
       - pgdata:/var/lib/postgresql/data
     environment:
