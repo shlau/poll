@@ -30,6 +30,9 @@ services:
       - type: bind
         source: ./api/
         target: /app/
+      - type: bind
+        source: /home/shlau/programming/keys/
+        target: /app/keys/
     networks:
       - backend
       - frontend
