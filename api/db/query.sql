@@ -36,3 +36,6 @@ DELETE FROM comments WHERE id = ($1);
 
 -- name: CreateUser :one
 INSERT INTO users (name, password_hash) VALUES ($1, crypt($2, gen_salt('md5'))) RETURNING id;
+
+-- name: Login :one
+SELECT (password_hash = crypt($2, password_hash)) AS pswmatch FROM users WHERE users.name = ($1);

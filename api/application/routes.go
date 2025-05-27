@@ -12,5 +12,6 @@ func (app *Application) routes() *chi.Mux {
 	r.Get("/questions/{questionId}/comments", app.getQuestionComments)
 	r.Post("/questions/{questionId}/comments", app.createComment)
 	r.Post("/users", app.createUser)
+	r.Post("/login", app.login)
 	return r
 }

@@ -191,6 +191,22 @@ func (q *Queries) GetQuestionComments(ctx context.Context, questionID pgtype.Int
 	return items, nil
 }
 
+const login = `-- name: Login :one
+SELECT (password_hash = crypt($2, password_hash)) AS pswmatch FROM users WHERE users.name = ($1)
+`
+
+type LoginParams struct {
+	Name  pgtype.Text
+	Crypt string
+}
+
+func (q *Queries) Login(ctx context.Context, arg LoginParams) (bool, error) {
+	row := q.db.QueryRow(ctx, login, arg.Name, arg.Crypt)
+	var pswmatch bool
+	err := row.Scan(&pswmatch)
+	return pswmatch, err
+}
+
 const upvote = `-- name: Upvote :one
 UPDATE questions SET votes = votes + 1 WHERE questions.id = ($1) RETURNING id, value, poll_id, votes
 `

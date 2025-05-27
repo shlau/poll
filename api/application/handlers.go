@@ -261,11 +261,35 @@ func (app *Application) createUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "error decoding request body", http.StatusInternalServerError)
 		return
 	}
-	log.Println(data)
 	u, err := app.queries.CreateUser(r.Context(), generatedsql.CreateUserParams{Name: pgtype.Text{String: data.Name, Valid: true}, Crypt: data.Password})
 	if err != nil {
 		http.Error(w, "error creating user", http.StatusInternalServerError)
 		return
 	}
 	render.JSON(w, r, u)
+}
+
+func (app *Application) login(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "error reading request body", http.StatusBadRequest)
+		return
+	}
+	var data UserRequest
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, "error decoding request body", http.StatusInternalServerError)
+		return
+	}
+	success, err := app.queries.Login(r.Context(), generatedsql.LoginParams{Name: pgtype.Text{String: data.Name, Valid: true}, Crypt: data.Password})
+	if err != nil {
+		http.Error(w, "error logging in", http.StatusInternalServerError)
+		return
+	}
+
+	if success {
+		render.JSON(w, r, "success")
+	} else {
+		render.JSON(w, r, "fail")
+	}
 }
