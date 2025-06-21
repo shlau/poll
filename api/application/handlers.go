@@ -302,7 +302,11 @@ func (app *Application) login(w http.ResponseWriter, r *http.Request) {
 	)
 
 	key = app.privateKey
-	t = jwt.New(jwt.SigningMethodES256)
+	t = jwt.NewWithClaims(jwt.SigningMethodES256,
+		jwt.MapClaims{
+			"id": int(resp.ID),
+		})
+
 	s, err = t.SignedString(key)
 
 	loginResponse := LoginResponse{ID: int(resp.ID), Name: resp.Name.String, Token: s}
@@ -314,5 +318,20 @@ func (app *Application) login(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, loginResponse)
 	} else {
 		render.JSON(w, r, "Invalid password")
+	}
+}
+
+func (app *Application) verifyToken(tokenString string) int {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return app.publicKey, nil
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodES256.Alg()}))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		return claims["id"].(int)
+	} else {
+		return -1
 	}
 }
