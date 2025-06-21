@@ -192,7 +192,7 @@ func (q *Queries) GetQuestionComments(ctx context.Context, questionID pgtype.Int
 }
 
 const login = `-- name: Login :one
-SELECT (password_hash = crypt($2, password_hash)) AS pswmatch FROM users WHERE users.name = ($1)
+SELECT password_hash = crypt($2, password_hash) AS success, users.id, users.name FROM users WHERE users.name = ($1)
 `
 
 type LoginParams struct {
@@ -200,11 +200,17 @@ type LoginParams struct {
 	Crypt string
 }
 
-func (q *Queries) Login(ctx context.Context, arg LoginParams) (bool, error) {
+type LoginRow struct {
+	Success bool
+	ID      int64
+	Name    pgtype.Text
+}
+
+func (q *Queries) Login(ctx context.Context, arg LoginParams) (LoginRow, error) {
 	row := q.db.QueryRow(ctx, login, arg.Name, arg.Crypt)
-	var pswmatch bool
-	err := row.Scan(&pswmatch)
-	return pswmatch, err
+	var i LoginRow
+	err := row.Scan(&i.Success, &i.ID, &i.Name)
+	return i, err
 }
 
 const upvote = `-- name: Upvote :one

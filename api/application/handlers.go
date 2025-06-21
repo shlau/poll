@@ -1,6 +1,7 @@
 package application
 
 import (
+	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shlau/poll/db/generatedsql"
@@ -49,6 +51,12 @@ type CommentsResponse struct {
 type UserRequest struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Token string `json:"token"`
 }
 
 func getPollId(r *http.Request) (uuid.UUID, error) {
@@ -278,18 +286,33 @@ func (app *Application) login(w http.ResponseWriter, r *http.Request) {
 	var data UserRequest
 	err = json.Unmarshal(body, &data)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, "error decoding request body", http.StatusInternalServerError)
 		return
 	}
-	success, err := app.queries.Login(r.Context(), generatedsql.LoginParams{Name: pgtype.Text{String: data.Name, Valid: true}, Crypt: data.Password})
+	resp, err := app.queries.Login(r.Context(), generatedsql.LoginParams{Name: pgtype.Text{String: data.Name, Valid: true}, Crypt: data.Password})
 	if err != nil {
 		http.Error(w, "error logging in", http.StatusInternalServerError)
 		return
 	}
+	var (
+		key *ecdsa.PrivateKey
+		t   *jwt.Token
+		s   string
+	)
 
-	if success {
-		render.JSON(w, r, "success")
+	key = app.privateKey
+	t = jwt.New(jwt.SigningMethodES256)
+	s, err = t.SignedString(key)
+
+	loginResponse := LoginResponse{ID: int(resp.ID), Name: resp.Name.String, Token: s}
+	if err != nil {
+		http.Error(w, "error signing token", http.StatusInternalServerError)
+	}
+
+	if resp.Success {
+		render.JSON(w, r, loginResponse)
 	} else {
-		render.JSON(w, r, "fail")
+		render.JSON(w, r, "Invalid password")
 	}
 }
