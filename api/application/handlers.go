@@ -29,7 +29,8 @@ type QuestionResponse struct {
 	Votes int    `json:"votes"`
 }
 type PollRequest struct {
-	Name string `json:"name"`
+	Name      string `json:"name"`
+	CreatorID int    `json:"creator_id"`
 }
 
 type PollResponse struct {
@@ -82,7 +83,16 @@ func (app *Application) createPoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createdPoll, err := app.queries.CreatePoll(r.Context(), data.Name)
+	var params generatedsql.CreatePollParams
+	if data.CreatorID == 0 {
+		params = generatedsql.CreatePollParams{Name: data.Name}
+	} else {
+		creatorId := pgtype.Int8{Int64: int64(data.CreatorID), Valid: true}
+		params = generatedsql.CreatePollParams{Name: data.Name, CreatorID: creatorId}
+		log.Println(params)
+	}
+
+	createdPoll, err := app.queries.CreatePoll(r.Context(), params)
 	if err != nil {
 		http.Error(w, "error creating poll", http.StatusInternalServerError)
 		return

@@ -17,8 +17,9 @@ type Comment struct {
 }
 
 type Poll struct {
-	ID   uuid.UUID
-	Name string
+	ID        uuid.UUID
+	Name      string
+	CreatorID pgtype.Int8
 }
 
 type Question struct {

@@ -36,15 +36,20 @@ func (q *Queries) CreateComment(ctx context.Context, arg CreateCommentParams) (C
 
 const createPoll = `-- name: CreatePoll :one
 INSERT INTO
-    polls (name)
+    polls (name, creator_id)
 VALUES
-    ($1) RETURNING id, name
+    ($1, $2) RETURNING id, name, creator_id
 `
 
-func (q *Queries) CreatePoll(ctx context.Context, name string) (Poll, error) {
-	row := q.db.QueryRow(ctx, createPoll, name)
+type CreatePollParams struct {
+	Name      string
+	CreatorID pgtype.Int8
+}
+
+func (q *Queries) CreatePoll(ctx context.Context, arg CreatePollParams) (Poll, error) {
+	row := q.db.QueryRow(ctx, createPoll, arg.Name, arg.CreatorID)
 	var i Poll
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.CreatorID)
 	return i, err
 }
 
@@ -123,13 +128,13 @@ func (q *Queries) Downvote(ctx context.Context, id int64) (Question, error) {
 }
 
 const getPoll = `-- name: GetPoll :one
-SELECT id, name FROM polls WHERE id = ($1)
+SELECT id, name, creator_id FROM polls WHERE id = ($1)
 `
 
 func (q *Queries) GetPoll(ctx context.Context, id uuid.UUID) (Poll, error) {
 	row := q.db.QueryRow(ctx, getPoll, id)
 	var i Poll
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.CreatorID)
 	return i, err
 }
 
@@ -152,6 +157,30 @@ func (q *Queries) GetPollQuestions(ctx context.Context, pollID uuid.UUID) ([]Que
 			&i.PollID,
 			&i.Votes,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getPolls = `-- name: GetPolls :many
+SELECT id, name, creator_id FROM polls WHERE creator_id = ($1)
+`
+
+func (q *Queries) GetPolls(ctx context.Context, creatorID pgtype.Int8) ([]Poll, error) {
+	rows, err := q.db.Query(ctx, getPolls, creatorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Poll
+	for rows.Next() {
+		var i Poll
+		if err := rows.Scan(&i.ID, &i.Name, &i.CreatorID); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

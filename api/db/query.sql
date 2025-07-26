@@ -1,8 +1,8 @@
 -- name: CreatePoll :one
 INSERT INTO
-    polls (name)
+    polls (name, creator_id)
 VALUES
-    ($1) RETURNING *;
+    ($1, $2) RETURNING *;
 
 -- name: CreateQuestion :one
 INSERT INTO
@@ -18,6 +18,9 @@ SELECT * FROM questions WHERE questions.poll_id = ($1);
 
 -- name: GetPoll :one
 SELECT * FROM polls WHERE id = ($1);
+
+-- name: GetPolls :many
+SELECT * FROM polls WHERE creator_id = ($1);
 
 -- name: Upvote :one
 UPDATE questions SET votes = votes + 1 WHERE questions.id = ($1) RETURNING *;
