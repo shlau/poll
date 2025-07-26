@@ -2,12 +2,25 @@ import { useState } from "react";
 import "./Login.less";
 import { TextField, Button } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "react-router";
 
 type action = "login" | "register";
-function Login() {
+interface LoginProps {
+  setToken: Function;
+}
+
+interface UserData {
+  token: string;
+  name: string;
+  id: number;
+}
+
+function Login({ setToken }: LoginProps) {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const isValidInput = name && password;
+
+  const navigate = useNavigate();
 
   const fetchUser = (actionType: action) => {
     let url = "/api";
@@ -26,18 +39,19 @@ function Login() {
     };
   };
 
+  const onFetchUserSuccess = (data: UserData) => {
+    setToken(data.token);
+    navigate("/");
+  };
+
   const registerMutation = useMutation({
     mutationFn: fetchUser("register"),
-    onSuccess: (data) => {
-      console.log(data);
-    },
+    onSuccess: onFetchUserSuccess,
   });
 
   const loginMutation = useMutation({
     mutationFn: fetchUser("login"),
-    onSuccess: (data) => {
-      console.log(data);
-    },
+    onSuccess: onFetchUserSuccess,
   });
 
   return (
@@ -61,8 +75,7 @@ function Login() {
         variant="contained"
         disabled={!isValidInput}
         onClick={() => {
-          console.log("Register");
-          registerMutation.mutate()
+          registerMutation.mutate();
         }}
       >
         Register
@@ -71,8 +84,7 @@ function Login() {
         variant="contained"
         disabled={!isValidInput}
         onClick={() => {
-          console.log("Login");
-          loginMutation.mutate()
+          loginMutation.mutate();
         }}
       >
         Login

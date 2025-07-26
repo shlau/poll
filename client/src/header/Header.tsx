@@ -4,9 +4,10 @@ import { useLocation, useNavigate } from "react-router";
 
 interface HeaderProps {
   token: string;
+  setToken: Function
 }
 
-function Header({ token }: HeaderProps) {
+function Header({ token, setToken }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,7 +18,14 @@ function Header({ token }: HeaderProps) {
   return (
     <div className="header-container">
       {token ? (
-        <div>{token}</div>
+        <Button
+          variant="contained"
+          onClick={() => {
+            setToken("")
+          }}
+        >
+          Logout
+        </Button>
       ) : (
         <Button
           variant="contained"

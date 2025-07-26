@@ -44,10 +44,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <BrowserRouter>
-          <Header token={token} />
+          <Header token={token} setToken={setToken} />
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<Login setToken={setToken} />} />
             <Route path="/polls/:pollId" element={<Poll />} />
             <Route path="/polls/:pollId/results" element={<Results />} />
           </Routes>
