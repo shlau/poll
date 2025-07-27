@@ -5,6 +5,7 @@ import "github.com/go-chi/chi/v5"
 func (app *Application) routes() *chi.Mux {
 	r := chi.NewRouter()
 	r.Post("/polls", app.createPoll)
+	r.Get("/polls", app.getPolls)
 	r.Get("/polls/{pollId}", app.getPoll)
 	r.Get("/polls/{pollId}/questions", app.getQuestions)
 	r.Post("/polls/{pollId}/questions", app.createQuestion)

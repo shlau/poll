@@ -89,7 +89,6 @@ func (app *Application) createPoll(w http.ResponseWriter, r *http.Request) {
 	} else {
 		creatorId := pgtype.Int8{Int64: int64(data.CreatorID), Valid: true}
 		params = generatedsql.CreatePollParams{Name: data.Name, CreatorID: creatorId}
-		log.Println(params)
 	}
 
 	createdPoll, err := app.queries.CreatePoll(r.Context(), params)
@@ -98,9 +97,35 @@ func (app *Application) createPoll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println(createdPoll)
 	res := &PollResponse{ID: createdPoll.ID.String(), Name: createdPoll.Name}
 	render.JSON(w, r, res)
+}
+
+func (app *Application) getPolls(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "error reading request body", http.StatusBadRequest)
+		return
+	}
+
+	var data PollRequest
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, "error decoding request body", http.StatusBadRequest)
+		return
+	}
+
+	pollsResponse, err := app.queries.GetPolls(r.Context(), pgtype.Int8{Int64: int64(data.CreatorID), Valid: true})
+	if err != nil {
+		http.Error(w, "error getting polls", http.StatusInternalServerError)
+		return
+	}
+
+	polls := make([]PollResponse, len(pollsResponse))
+	for i, poll := range pollsResponse {
+		polls[i] = PollResponse{ID: poll.ID.String(), Name: poll.Name}
+	}
+	render.JSON(w, r, &polls)
 }
 
 func (app *Application) getPoll(w http.ResponseWriter, r *http.Request) {
