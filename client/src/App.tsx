@@ -1,5 +1,5 @@
 import { ThemeProvider } from "@emotion/react";
-import { Poll } from "@mui/icons-material";
+import Poll from "./poll/Poll"
 import { createTheme } from "@mui/material";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router";
@@ -41,7 +41,7 @@ const queryClient = new QueryClient({
 
 function App() {
   const [token, setToken] = useState("");
-  const [userId, setUserId] = useState<number | null>(null);
+  const [userId, setUserId] = useState<number | undefined>();
 
   useEffect(() => {
     const storedToken = localStorage.getItem("poll-user-token");
@@ -57,14 +57,14 @@ function App() {
         <BrowserRouter>
           <Header token={token} setToken={setToken} setUserId={setUserId} />
           <Routes>
-            <Route path="/polls/:pollId" element={<Poll />} />
             <Route path="/polls/:pollId/results" element={<Results />} />
+            <Route path="/polls/:pollId" element={<Poll />} />
             <Route path="/polls" element={<Polls token={token} />} />
             <Route
               path="/login"
               element={<Login setToken={setToken} setUserId={setUserId} />}
             />
-            <Route path="/" element={<Home token={token} />} />
+            <Route path="/" element={<Home userId={userId} />} />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>

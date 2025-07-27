@@ -5,15 +5,15 @@ import { useMutation } from "@tanstack/react-query";
 import "./Home.less";
 
 interface HomeProps {
-  token: string;
+  userId: number | undefined;
 }
-function Home({ token }: HomeProps) {
+function Home({ userId }: HomeProps) {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const createPoll = async () => {
     const response = await fetch("/api/polls", {
       method: "POST",
-      body: JSON.stringify({ name, token }),
+      body: JSON.stringify({ name, creator_id: userId }),
     });
     const pollData = await response.json();
     return pollData;
