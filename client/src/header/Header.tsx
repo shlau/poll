@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router";
 
 interface HeaderProps {
   token: string;
-  setToken: Function
+  setToken: Function;
 }
 
 function Header({ token, setToken }: HeaderProps) {
@@ -12,16 +12,26 @@ function Header({ token, setToken }: HeaderProps) {
   const location = useLocation();
 
   if (location.pathname.includes("login")) {
-    return <></>
+    return <></>;
   }
 
   return (
     <div className="header-container">
+      {token && (
+        <Button
+          variant="contained"
+          onClick={() => {
+            navigate(`/polls`);
+          }}
+        >
+          My polls
+        </Button>
+      )}
       {token ? (
         <Button
           variant="contained"
           onClick={() => {
-            setToken("")
+            setToken("");
           }}
         >
           Logout

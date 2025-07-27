@@ -9,6 +9,7 @@ import Home from "./home/Home";
 import Results from "./results/Results";
 import { useState } from "react";
 import Login from "./login/Login";
+import Polls from "./polls/Polls";
 
 const theme = createTheme({
   palette: {
@@ -48,6 +49,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login setToken={setToken} />} />
+            <Route path="/polls" element={<Polls token={token} />} />
             <Route path="/polls/:pollId" element={<Poll />} />
             <Route path="/polls/:pollId/results" element={<Results />} />
           </Routes>

@@ -33,6 +33,10 @@ type PollRequest struct {
 	CreatorID int    `json:"creator_id"`
 }
 
+type PollsRequest struct {
+	Token string `json:"token"`
+}
+
 type PollResponse struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -102,20 +106,14 @@ func (app *Application) createPoll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) getPolls(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "error reading request body", http.StatusBadRequest)
+	token := r.URL.Query().Get("token")
+
+	if token == "" {
+		http.Error(w, "missing token", http.StatusBadRequest)
 		return
 	}
-
-	var data PollRequest
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		http.Error(w, "error decoding request body", http.StatusBadRequest)
-		return
-	}
-
-	pollsResponse, err := app.queries.GetPolls(r.Context(), pgtype.Int8{Int64: int64(data.CreatorID), Valid: true})
+	creatorId := app.verifyToken(token)
+	pollsResponse, err := app.queries.GetPolls(r.Context(), pgtype.Int8{Int64: int64(creatorId), Valid: true})
 	if err != nil {
 		http.Error(w, "error getting polls", http.StatusInternalServerError)
 		return
@@ -352,7 +350,7 @@ func (app *Application) login(w http.ResponseWriter, r *http.Request) {
 	if resp.Success {
 		render.JSON(w, r, loginResponse)
 	} else {
-		render.JSON(w, r, "Invalid password")
+		http.Error(w, "invalid password", http.StatusBadRequest)
 	}
 }
 
@@ -365,7 +363,7 @@ func (app *Application) verifyToken(tokenString string) int {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		return claims["id"].(int)
+		return int(claims["id"].(float64))
 	} else {
 		return -1
 	}
