@@ -7,6 +7,7 @@ import { useNavigate } from "react-router";
 type action = "login" | "register";
 interface LoginProps {
   setToken: Function;
+  setUserId: Function;
 }
 
 interface UserData {
@@ -15,7 +16,7 @@ interface UserData {
   id: number;
 }
 
-function Login({ setToken }: LoginProps) {
+function Login({ setToken, setUserId }: LoginProps) {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const isValidInput = name && password;
@@ -35,12 +36,15 @@ function Login({ setToken }: LoginProps) {
         body: JSON.stringify({ name, password }),
       });
       const userData = await response.json();
+      localStorage.setItem(`poll-user-token`, userData.token);
+      localStorage.setItem(`poll-user-id`, userData.id);
       return userData;
     };
   };
 
   const onFetchUserSuccess = (data: UserData) => {
     setToken(data.token);
+    setUserId(data.id)
     navigate("/");
   };
 

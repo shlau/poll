@@ -2,15 +2,18 @@ import { Button, TextField } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useMutation } from "@tanstack/react-query";
-import "./Home.less"
+import "./Home.less";
 
-function Home() {
+interface HomeProps {
+  token: string;
+}
+function Home({ token }: HomeProps) {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const createPoll = async () => {
     const response = await fetch("/api/polls", {
       method: "POST",
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, token }),
     });
     const pollData = await response.json();
     return pollData;

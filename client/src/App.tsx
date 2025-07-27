@@ -7,7 +7,7 @@ import "./App.less";
 import Header from "./header/Header";
 import Home from "./home/Home";
 import Results from "./results/Results";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Login from "./login/Login";
 import Polls from "./polls/Polls";
 
@@ -41,17 +41,30 @@ const queryClient = new QueryClient({
 
 function App() {
   const [token, setToken] = useState("");
+  const [userId, setUserId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("poll-user-token");
+    const storedUserId = localStorage.getItem("poll-user-id");
+    if (storedToken && storedUserId) {
+      setToken(storedToken);
+      setUserId(parseInt(storedUserId));
+    }
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <BrowserRouter>
-          <Header token={token} setToken={setToken} />
+          <Header token={token} setToken={setToken} setUserId={setUserId} />
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login setToken={setToken} />} />
-            <Route path="/polls" element={<Polls token={token} />} />
             <Route path="/polls/:pollId" element={<Poll />} />
             <Route path="/polls/:pollId/results" element={<Results />} />
+            <Route path="/polls" element={<Polls token={token} />} />
+            <Route
+              path="/login"
+              element={<Login setToken={setToken} setUserId={setUserId} />}
+            />
+            <Route path="/" element={<Home token={token} />} />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>

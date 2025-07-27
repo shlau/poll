@@ -5,9 +5,10 @@ import { useLocation, useNavigate } from "react-router";
 interface HeaderProps {
   token: string;
   setToken: Function;
+  setUserId: Function;
 }
 
-function Header({ token, setToken }: HeaderProps) {
+function Header({ token, setToken, setUserId }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,6 +18,14 @@ function Header({ token, setToken }: HeaderProps) {
 
   return (
     <div className="header-container">
+      <Button
+        variant="contained"
+        onClick={() => {
+          navigate(`/`);
+        }}
+      >
+        Home
+      </Button>
       {token && (
         <Button
           variant="contained"
@@ -31,7 +40,9 @@ function Header({ token, setToken }: HeaderProps) {
         <Button
           variant="contained"
           onClick={() => {
+            localStorage.removeItem(`poll-user-token`);
             setToken("");
+            setUserId("");
           }}
         >
           Logout
