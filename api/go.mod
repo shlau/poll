@@ -3,12 +3,15 @@ module github.com/shlau/poll
 go 1.22.2
 
 require (
+	github.com/cloudinary/cloudinary-go/v2 v2.11.0
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/golang-jwt/jwt/v5 v5.2.2
 )
 
 require (
 	github.com/ajg/form v1.5.1 // indirect
+	github.com/creasty/defaults v1.7.0 // indirect
+	github.com/gorilla/schema v1.4.1 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 )
