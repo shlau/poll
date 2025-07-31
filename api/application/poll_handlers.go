@@ -2,10 +2,14 @@ package application
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
-	"log"
 	"net/http"
+	"net/url"
+	"os"
+	"time"
 
+	"github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/go-chi/render"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shlau/poll/db/generatedsql"
@@ -23,6 +27,11 @@ type PollsRequest struct {
 type PollResponse struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type SignResponse struct {
+	Timestamp time.Time `json:"timestamp"`
+	Signature string    `json:"signature"`
 }
 
 func (app *Application) createPoll(w http.ResponseWriter, r *http.Request) {
@@ -87,11 +96,27 @@ func (app *Application) getPoll(w http.ResponseWriter, r *http.Request) {
 
 	pollResponse, err := app.queries.GetPoll(r.Context(), pollId)
 	if err != nil {
-		log.Println(err)
 		http.Error(w, "error getting poll", http.StatusInternalServerError)
 		return
 	}
 
 	res := &PollResponse{ID: pollId.String(), Name: pollResponse.Name}
 	render.JSON(w, r, res)
+}
+
+func (app *Application) signUpload(w http.ResponseWriter, r *http.Request) {
+	currentTime := time.Now()
+	timestamp := fmt.Sprintf("%d", currentTime.UnixMilli())
+	apiSecret := os.Getenv("CLOUDINARY_API_SECRET")
+	params := url.Values{
+		"timestamp": {timestamp},
+		"folder":    {"poll"},
+	}
+	resp, err := api.SignParameters(params, apiSecret)
+	if err != nil {
+		http.Error(w, "error signing upload", http.StatusInternalServerError)
+		return
+	}
+	signResponse := SignResponse{Signature: resp, Timestamp: currentTime}
+	render.JSON(w, r, &signResponse)
 }

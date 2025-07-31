@@ -14,5 +14,6 @@ func (app *Application) routes() *chi.Mux {
 	r.Post("/questions/{questionId}/comments", app.createComment)
 	r.Post("/users", app.createUser)
 	r.Post("/login", app.login)
+	r.Get("/signature", app.signUpload)
 	return r
 }
