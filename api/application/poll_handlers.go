@@ -2,12 +2,10 @@ package application
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
+	"log"
 	"net/http"
-	"net/url"
 	"os"
-	"time"
 
 	"github.com/cloudinary/cloudinary-go/v2/api"
 	"github.com/go-chi/render"
@@ -30,8 +28,8 @@ type PollResponse struct {
 }
 
 type SignResponse struct {
-	Timestamp time.Time `json:"timestamp"`
-	Signature string    `json:"signature"`
+	Timestamp string `json:"timestamp"`
+	Signature string `json:"signature"`
 }
 
 func (app *Application) createPoll(w http.ResponseWriter, r *http.Request) {
@@ -105,18 +103,23 @@ func (app *Application) getPoll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) signUpload(w http.ResponseWriter, r *http.Request) {
-	currentTime := time.Now()
-	timestamp := fmt.Sprintf("%d", currentTime.UnixMilli())
+	timestamp := r.URL.Query().Get("timestamp")
+	// currentTime := time.Now()
+	// timestamp := fmt.Sprintf("%d", currentTime.UnixMilli())
 	apiSecret := os.Getenv("CLOUDINARY_API_SECRET")
-	params := url.Values{
-		"timestamp": {timestamp},
-		"folder":    {"poll"},
-	}
-	resp, err := api.SignParameters(params, apiSecret)
+	// params := url.Values{
+	// 	"timestamp": {timestamp},
+	// 	"source":    {"uw"},
+	// 	"folder":    {"poll"},
+	// }
+
+	log.Println("signing upload")
+	log.Println(r.URL.Query())
+	resp, err := api.SignParameters(r.URL.Query(), apiSecret)
 	if err != nil {
 		http.Error(w, "error signing upload", http.StatusInternalServerError)
 		return
 	}
-	signResponse := SignResponse{Signature: resp, Timestamp: currentTime}
+	signResponse := SignResponse{Signature: resp, Timestamp: timestamp}
 	render.JSON(w, r, &signResponse)
 }
