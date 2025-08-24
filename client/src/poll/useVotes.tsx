@@ -34,9 +34,7 @@ function useVotes(pollId?: string) {
   };
 
   const onVoteMutation = async (currentQuestion: Question) => {
-    let checked = true;
     if (selectedQuestions.has(currentQuestion.id)) {
-      checked = false;
       selectedQuestions.delete(currentQuestion.id);
     } else {
       selectedQuestions.add(currentQuestion.id);

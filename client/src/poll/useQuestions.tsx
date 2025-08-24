@@ -17,7 +17,7 @@ function useQuestions(pollId?: string) {
   };
 
   const questionsQuery = useQuery({
-    queryKey: ["questions"],
+    queryKey: ["questions", pollId],
     queryFn: getQuestions,
   });
 

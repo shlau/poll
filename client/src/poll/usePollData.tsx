@@ -12,7 +12,7 @@ function usePollData(pollId?: string) {
     const data = await response.json();
     return data;
   };
-  const pollQuery = useQuery({ queryKey: ["poll"], queryFn: getPollData });
+  const pollQuery = useQuery({ queryKey: ["poll", pollId], queryFn: getPollData });
   return pollQuery;
 }
 export default usePollData;
