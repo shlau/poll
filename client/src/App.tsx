@@ -10,7 +10,6 @@ import Results from "./results/Results";
 import { useEffect, useState } from "react";
 import Login from "./login/Login";
 import Polls from "./polls/Polls";
-import UploadWidget from "./UploadWidget";
 
 const theme = createTheme({
   palette: {
@@ -56,7 +55,6 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <BrowserRouter>
-          <UploadWidget />
           <Header token={token} setToken={setToken} setUserId={setUserId} />
           <Routes>
             <Route path="/polls/:pollId/results" element={<Results />} />

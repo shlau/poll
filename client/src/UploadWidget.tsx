@@ -1,26 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 
-const UploadWidget = () => {
+interface UploadWidgetProps {
+  pollId?: number | string;
+  questionId?: number | string;
+}
+
+const UploadWidget = ({ pollId, questionId }: UploadWidgetProps) => {
   const cloudinaryRef = useRef<any>(null);
-  const widgetRef = useRef<any>(null);
-
-  // var generateSignature = function (callback, params_to_sign) {
-  //   $.ajax({
-  //     url: "https://www.my-domain.com/my_generate_signature",
-  //     type: "GET",
-  //     dataType: "text",
-  //     data: { data: params_to_sign },
-  //     complete: function () {
-  //       console.log("complete");
-  //     },
-  //     success: function (signature, textStatus, xhr) {
-  //       callback(signature);
-  //     },
-  //     error: function (xhr, status, error) {
-  //       console.log(xhr, status, error);
-  //     },
-  //   });
-  // };
   const generateSignature = async (cb: Function, paramsToSign: any) => {
     try {
       const queryParams = Object.keys(paramsToSign)
@@ -35,26 +21,32 @@ const UploadWidget = () => {
     }
   };
 
-  useEffect(() => {
+  const uploadQuestionImage = () => {
     // @ts-ignore
     cloudinaryRef.current = window.cloudinary;
-    widgetRef.current = cloudinaryRef.current.createUploadWidget(
+    cloudinaryRef.current.openUploadWidget(
       {
         cloudName: import.meta.env.VITE_IMAGE_CLOUD_NAME,
         uploadPreset: import.meta.env.VITE_IMAGE_UPLOAD_PRESET,
         api_key: import.meta.env.VITE_API_KEY,
         uploadSignature: generateSignature,
+        asset_folder: `polls/${pollId}`,
+        publicId: `polls/${pollId}/questions/${questionId}`,
       },
-      function (error: any, result: any) {
-        console.log(result);
-        // Handle the result or error here
+      (err: any, res: any) => {
+        if (err) {
+          console.log(err);
+        }
+        if (res) {
+          console.log(res);
+        }
       }
     );
-  }, []);
+  };
 
   return (
     <div>
-      <button onClick={() => widgetRef.current.open()}>Upload</button>
+      <button onClick={() => uploadQuestionImage()}>Upload</button>
     </div>
   );
 };

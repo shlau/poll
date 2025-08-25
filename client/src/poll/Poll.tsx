@@ -14,6 +14,7 @@ import useQuestions, { Question } from "./useQuestions";
 import useVotes from "./useVotes";
 import CommentIcon from "@mui/icons-material/Comment";
 import Comments from "../comments/Comments";
+import UploadWidget from "../UploadWidget";
 
 function Poll() {
   let params = useParams();
@@ -32,6 +33,12 @@ function Poll() {
   if (isError) {
     return <div> An error occured</div>;
   }
+
+  const getImageUrl = (questionId: number): string => {
+    return `https://res.cloudinary.com/${
+      import.meta.env.VITE_IMAGE_CLOUD_NAME
+    }/image/upload/polls/${params.pollId}/questions/${questionId}.png`;
+  };
 
   return (
     <div className="poll-container">
@@ -56,6 +63,12 @@ function Poll() {
                 return (
                   <li key={q.id}>
                     <div className="question-content">
+                      <UploadWidget questionId={q.id} pollId={params.pollId} />
+                      <img
+                        // @ts-ignore
+                        src={getImageUrl(q.id)}
+                        alt="upload an image"
+                      />
                       <IconButton
                         aria-label="comment"
                         onClick={() =>
