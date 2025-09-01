@@ -26,6 +26,17 @@ function Poll() {
   const { selectedQuestions, toggleVote } = useVotes(params.pollId);
   const navigate = useNavigate();
 
+  const getImageUrl = (questionId: number): string => {
+    return `https://res.cloudinary.com/${
+      import.meta.env.VITE_IMAGE_CLOUD_NAME
+    }/image/upload/polls/${params.pollId}/questions/${questionId}.png`;
+  };
+  const initialImages = questions?.map((q) => {
+    const imageUrl = getImageUrl(q.id);
+    return imageUrl;
+  });
+  const [images, setImages] = useState(initialImages ?? []);
+
   if (isPending) {
     return <span>Loading...</span>;
   }
@@ -33,12 +44,6 @@ function Poll() {
   if (isError) {
     return <div> An error occured</div>;
   }
-
-  const getImageUrl = (questionId: number): string => {
-    return `https://res.cloudinary.com/${
-      import.meta.env.VITE_IMAGE_CLOUD_NAME
-    }/image/upload/polls/${params.pollId}/questions/${questionId}.png`;
-  };
 
   return (
     <div className="poll-container">
@@ -59,15 +64,21 @@ function Poll() {
         <div className="content">
           <div className="questions-container">
             <div className="question-list-container">
-              {questions?.map((q) => {
+              {questions?.map((q, i) => {
                 return (
                   <li key={q.id}>
                     <div className="question-content">
-                      <UploadWidget questionId={q.id} pollId={params.pollId} />
+                      <UploadWidget
+                        questionId={q.id}
+                        pollId={params.pollId}
+                        setImages={setImages}
+                        index={i}
+                      />
                       <img
-                        // @ts-ignore
-                        src={getImageUrl(q.id)}
+                        src={`${images[i]}`}
                         alt="upload an image"
+                        width={100}
+                        height={100}
                       />
                       <IconButton
                         aria-label="comment"

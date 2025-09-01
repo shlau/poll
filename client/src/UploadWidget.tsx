@@ -3,9 +3,16 @@ import { useRef } from "react";
 interface UploadWidgetProps {
   pollId?: number | string;
   questionId?: number | string;
+  setImages: Function;
+  index: number;
 }
 
-const UploadWidget = ({ pollId, questionId }: UploadWidgetProps) => {
+const UploadWidget = ({
+  pollId,
+  questionId,
+  setImages,
+  index,
+}: UploadWidgetProps) => {
   const cloudinaryRef = useRef<any>(null);
   const generateSignature = async (cb: Function, paramsToSign: any) => {
     try {
@@ -38,6 +45,21 @@ const UploadWidget = ({ pollId, questionId }: UploadWidgetProps) => {
           console.log(err);
         }
         if (res) {
+          if (res.info.url) {
+            setImages((currentImages: string[]) => {
+              if (currentImages.length === index) {
+                return [...currentImages, res.info.url];
+              } else {
+                return currentImages.map((img, i) => {
+                  if (i === index) {
+                    return res.info.url;
+                  } else {
+                    return img;
+                  }
+                });
+              }
+            });
+          }
           console.log(res);
         }
       }
